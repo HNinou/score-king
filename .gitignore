@@ -10,3 +10,8 @@ ios/**/xcuserdata/
 *.xcresult
 shared/fixtures/generated/
 .claude/settings.local.json
+node_modules/
+web/dist/
+web/coverage/
+web/test-results/
+web/playwright-report/

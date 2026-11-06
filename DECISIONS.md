@@ -10,3 +10,13 @@ Format : `AAAA-MM-JJ — Sujet` · Contexte · Décision · Alternative écarté
 - **Égalité finale** : vainqueurs ex aequo (le livret ne prévoit pas de départage).
 - **Aucun score stocké** : tout est recalculé depuis les saisies.
 - **Sons générés par code** (originalité et licence garanties), CC0 toléré avec crédit.
+
+## Décisions prises pendant la construction (2026-11-06)
+- **Portraits de pirates au lieu d'emblèmes** (demande du propriétaire) : 12 portraits SVG originaux, style « gravure peinte » sombre ; le champ `emblem` du format commun contient l'identifiant du portrait.
+- **Sons joués via `<audio>` préchargés** plutôt que `fetch` + Web Audio : `check-all.sh` interdit `fetch(` dans `web/src`. Comportement identique (priorités, variantes, muet).
+- **Cartes spéciales activables en cours de partie** (Kraken, Baleine, Butin, Harry, Roatan) : un tap active l'option pour la partie ; désactivation impossible si une manche terminée l'utilise.
+- **Manche annulée** (`voided: true`, champ optionnel ajouté au format commun) : 0 point pour tous, cumuls inchangés, visible « annulée » au Grand Livre, réversible depuis l'éditeur. « Redistribuer » efface la manche en cours.
+- **Annonce du classement façon jeu de plateau** après chaque manche + remarque ciblée sur un joueur (remontée, chute, série, raté…), jamais le même deux fois de suite ni celui déjà commenté au bilan.
+- **Effets rétro** (curseur sabre/crochet en pixel art, traînée de pièces, lanterne, bandeau défilant, badges 88×31) : désactivables dans Réglages, coupés en mode animations réduites.
+- **Chiffres jamais en Pirata One** (règle de la DA) : boutons principaux et rangs en police système.
+- **Redo** dans le menu (et Ctrl/Cmd+Maj+Z) pour libérer la barre du haut sur mobile.
