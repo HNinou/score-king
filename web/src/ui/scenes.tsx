@@ -1,6 +1,6 @@
 // Scènes de fin de manche, façon dessin animé : ce qui s'est vraiment passé (Kraken, pirates croqués,
 // Roi noyé, naufrage…), de plus en plus déjanté à mesure que la partie avance (intensité 1 → 3).
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { audio, type SoundId } from '../audio/audio';
 import { voice } from '../audio/voice';
 import type { Scene, SceneReel } from '../game/events';
@@ -361,6 +361,17 @@ export function Cinema({ game, reel, onDone }: { game: Game; reel: SceneReel; on
   const [i, setI] = useState(0);
   const scene = reel.scenes[i];
   const next = () => (i + 1 >= reel.scenes.length ? onDone() : setI(i + 1));
+  const nextRef = useRef(next);
+  nextRef.current = next;
+  const stageRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = stageRef.current;
+    const h = (e: MouseEvent) => {
+      if (!(e.target instanceof HTMLElement && e.target.closest('button'))) nextRef.current();
+    };
+    el?.addEventListener('click', h);
+    return () => el?.removeEventListener('click', h);
+  }, []);
 
   useEffect(() => {
     if (!scene) {
@@ -383,9 +394,10 @@ export function Cinema({ game, reel, onDone }: { game: Game; reel: SceneReel; on
 
   if (!scene) return null;
   return (
-    <div className={`cinema int-${reel.intensity}`} role="dialog" aria-modal="true" aria-label={t('scene.label')}>
+    <div className={`cinema int-${reel.intensity}`} role="dialog" aria-modal="true" aria-label={t('scene.label')} ref={stageRef}>
       <div key={i} className="cinema-stage" style={css({ '--dur': `${DURATION[reel.intensity]}ms` })}>
         {renderScene(game, scene, reel.intensity)}
+        {(reel.nth[i] ?? 1) > 1 && <span className="again-sticker">{t('scene.again', { n: reel.nth[i] ?? 1 })}</span>}
       </div>
       <div className="cinema-bar">
         <span className="cinema-dots" aria-hidden="true">

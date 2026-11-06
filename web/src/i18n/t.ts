@@ -37,3 +37,8 @@ export function quip(gameId: string, key: EventKey, vars: Vars): string {
   seen.add(pick);
   return fill(pool[pick] ?? '', vars);
 }
+
+const pirateLines: Record<string, string> = fr.pirates;
+export function pirateLine(id: string): string {
+  return pirateLines[id] ?? '';
+}

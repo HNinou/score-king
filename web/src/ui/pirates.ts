@@ -50,3 +50,22 @@ export function pirateById(id: string): PirateLook {
   return PIRATES.find((p) => p.id === id) ?? (PIRATES[0] as PirateLook);
 }
 
+
+const MEN = ['Rocko', 'Jacques', 'Thomas', 'Grandpa', 'Eddy', 'Reed', 'Daniel', 'Nicolas'];
+const WOMEN = ['Flo', 'Amélie', 'Sandy', 'Shelley', 'Audrey', 'Marie', 'Grandma'];
+
+/** Voix de chaque pirate : voix préférées (si installées), hauteur et débit. */
+export const PIRATE_VOICES: Record<string, { names: string[]; pitch: number; rate: number }> = {
+  redbeard: { names: ['Rocko', ...MEN], pitch: 0.7, rate: 1 },
+  glasseye: { names: ['Jacques', ...MEN], pitch: 0.6, rate: 0.95 },
+  coral: { names: ['Flo', ...WOMEN], pitch: 1, rate: 1 },
+  oldsalt: { names: ['Grandpa', ...MEN], pitch: 0.6, rate: 0.85 },
+  scarlet: { names: ['Sandy', ...WOMEN], pitch: 0.9, rate: 1.05 },
+  barrel: { names: ['Rocko', 'Grandpa', ...MEN], pitch: 0.4, rate: 0.9 },
+  blackpearl: { names: ['Shelley', ...WOMEN], pitch: 0.85, rate: 1 },
+  revenant: { names: ['Grandpa', ...MEN], pitch: 0.1, rate: 0.7 },
+  parrot: { names: ['Eddy', 'Flo', ...MEN], pitch: 1.9, rate: 1.25 },
+  mad: { names: ['Reed', 'Rocko', ...MEN], pitch: 1.2, rate: 1.25 },
+  cabinboy: { names: ['Eddy', 'Reed', ...MEN], pitch: 1.4, rate: 1.15 },
+  kraken: { names: ['Grandma', 'Shelley', ...WOMEN], pitch: 0.5, rate: 0.85 },
+};

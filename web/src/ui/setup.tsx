@@ -4,8 +4,9 @@ import { MAX_CUSTOM_ROUNDS, MAX_PLAYERS, MIN_PLAYERS, PRESETS } from '../engine/
 import type { PresetKey } from '../engine/types';
 import { capFor, defaultSettings, PLAYER_COLORS, scheduleFor, uid, type Player, type Settings } from '../game/model';
 import { store, useStore } from '../game/store';
-import { t } from '../i18n/t';
-import { PIRATES } from './pirates';
+import { pirateLine, t } from '../i18n/t';
+import { PIRATE_VOICES, PIRATES } from './pirates';
+import { voice } from '../audio/voice';
 import { Avatar, Icon, Modal } from './common';
 import { PLAYER_HEX } from './tokens';
 
@@ -60,9 +61,15 @@ export function SetupScreen({ onBack, onStart }: { onBack: () => void; onStart: 
     const emblem = (free[Math.floor(Math.random() * free.length)] ?? PIRATES[0])?.id ?? 'redbeard';
     const color = PLAYER_COLORS.find((c) => !usedC.has(c)) ?? 'c1';
     setPlayers([...players, { id: uid(), name: nm, emblem, color }]);
+    introduce(emblem);
     setName('');
     setError('');
     audio.play('tap-wood');
+  };
+
+  const introduce = (pirate: string) => {
+    const v = PIRATE_VOICES[pirate];
+    if (v) voice.sayAs(pirateLine(pirate), v);
   };
 
   const move = (i: number, d: number) => {
@@ -267,7 +274,10 @@ export function SetupScreen({ onBack, onStart }: { onBack: () => void; onStart: 
                 key={x.id}
                 type="button"
                 aria-pressed={editingPlayer.emblem === x.id}
-                onClick={() => setPlayers(players.map((p) => (p.id === editingPlayer.id ? { ...p, emblem: x.id } : p)))}
+                onClick={() => {
+                  setPlayers(players.map((p) => (p.id === editingPlayer.id ? { ...p, emblem: x.id } : p)));
+                  introduce(x.id);
+                }}
               >
                 <Avatar player={{ ...editingPlayer, emblem: x.id }} size={64} />
                 <span>{x.name}</span>

@@ -101,6 +101,10 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
           <input type="checkbox" checked={p.retro} onChange={(e) => set({ retro: e.target.checked })} />
         </label>
         <label className="switch">
+          <span style={{ fontWeight: 600 }}>{t('settings.express')}</span>
+          <input type="checkbox" checked={p.express} onChange={(e) => set({ express: e.target.checked })} />
+        </label>
+        <label className="switch">
           <span style={{ fontWeight: 600 }}>{t('settings.wake')}</span>
           <input type="checkbox" checked={p.wakeLock} onChange={(e) => set({ wakeLock: e.target.checked })} />
         </label>

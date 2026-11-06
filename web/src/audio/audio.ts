@@ -19,7 +19,8 @@ export type SoundId =
   | 'whoosh'
   | 'kraken-roar'
   | 'chomp'
-  | 'twang';
+  | 'twang'
+  | 'yoho';
 
 const VARIANTS: Partial<Record<SoundId, number>> = { 'tap-wood': 3, coins: 3, splash: 2 };
 export const PRIORITY: Record<SoundId, number> = {
@@ -40,6 +41,7 @@ export const PRIORITY: Record<SoundId, number> = {
   'chest-fanfare': 7,
   chomp: 1,
   twang: 1,
+  yoho: 6,
   'kraken-roar': 6,
 };
 

@@ -270,9 +270,9 @@ button {
 
 /* bandeau leader */
 .leader-strip {
-  display: flex;
-  gap: var(--sp-2);
-  overflow-x: auto;
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
+  gap: 6px;
   padding: var(--sp-2) var(--sp-3);
   max-width: 720px;
   margin: 0 auto;
@@ -281,8 +281,9 @@ button {
 .leader-chip {
   display: flex;
   align-items: center;
-  gap: var(--sp-1);
-  padding: 2px var(--sp-2) 2px 2px;
+  gap: 4px;
+  min-width: 0;
+  padding: 2px 8px 2px 2px;
   border-radius: 999px;
   background: var(--surface);
   border: 1px solid var(--line);
@@ -2326,4 +2327,179 @@ button {
   .storm-layer {
     display: none;
   }
+}
+
+/* ------------------------------------------------------------ lignes joueur compactes (tout l'équipage visible) */
+.prow.compact {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sp-2);
+  padding: 10px var(--sp-3);
+}
+.pline {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+.pline .name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  font-size: var(--fs-l);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pline .value {
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  min-width: 1.4ch;
+  text-align: right;
+}
+.pline.sub {
+  min-height: 36px;
+}
+.bid-pill {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  font-weight: 700;
+  font-size: var(--fs-s);
+  white-space: nowrap;
+}
+
+/* donne */
+.deal {
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-3);
+  border-color: var(--gold);
+}
+.deal-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.deal-who {
+  font-weight: 700;
+  font-size: var(--fs-l);
+}
+.deal-n {
+  color: var(--ink-muted);
+}
+.deal-n .num {
+  font-size: var(--fs-hero);
+  font-weight: 900;
+  color: var(--gold);
+  line-height: 1;
+  vertical-align: -0.1em;
+}
+.card-fan {
+  position: relative;
+  width: 70px;
+  height: 60px;
+}
+.card-fan span {
+  position: absolute;
+  left: 22px;
+  top: 6px;
+  width: 30px;
+  height: 44px;
+  border-radius: 4px;
+  border: 2px solid var(--ink);
+  background: repeating-linear-gradient(45deg, #9e1b1b 0 4px, #7a1f1f 4px 8px);
+  transform-origin: 50% 100%;
+  transform: rotate(calc(var(--k) * 14deg));
+  animation: fan-in 500ms calc((var(--k) + 3) * 60ms) var(--ease) both;
+}
+@keyframes fan-in {
+  from { transform: rotate(0) translateY(20px); opacity: 0; }
+}
+.yoho {
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle, rgba(122, 31, 31, 0.92), rgba(8, 18, 25, 0.96));
+  pointer-events: none;
+}
+.yoho-word {
+  font-family: var(--font-title);
+  font-size: clamp(5rem, 30vw, 12rem);
+  color: #ffd84a;
+  -webkit-text-stroke: 4px #1a100a;
+  paint-order: stroke fill;
+  text-shadow: 8px 8px 0 #1a100a;
+  animation: stamp 420ms cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+.yoho-word.w2 {
+  font-size: clamp(6rem, 38vw, 15rem);
+  color: #fff;
+  animation: stamp 420ms cubic-bezier(0.3, 1.6, 0.5, 1) both, cine-shake 300ms 400ms 2;
+}
+
+.leader-chip .chip-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.again-sticker {
+  position: absolute;
+  right: 6%;
+  top: 22%;
+  z-index: 5;
+  padding: 6px 12px;
+  background: #9e1b1b;
+  color: #fff;
+  font-weight: 900;
+  text-transform: uppercase;
+  border: 3px solid #1a100a;
+  box-shadow: 4px 4px 0 #1a100a;
+  transform: rotate(8deg);
+  animation: stamp 420ms 500ms cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+.cards-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: var(--sp-2);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-weight: 800;
+}
+.mini-card {
+  width: 12px;
+  height: 16px;
+  border-radius: 2px;
+  border: 1.5px solid currentColor;
+  background: repeating-linear-gradient(45deg, transparent 0 2px, currentColor 2px 3px);
+}
+.chip-scroll {
+  display: flex;
+  gap: var(--sp-2);
+  overflow-x: auto;
+  padding: var(--sp-2) 0 2px;
+  scrollbar-width: none;
+}
+.chip-scroll .chip {
+  flex: none;
+}
+/* le dégradé et le texte du bas laissent passer les taps ; seuls les boutons les captent */
+.footer-bar,
+.footer-bar > div,
+.footer-hint {
+  pointer-events: none;
+}
+.footer-bar .btn {
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
 }

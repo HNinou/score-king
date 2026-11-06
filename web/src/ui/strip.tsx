@@ -11,15 +11,19 @@ export function LeaderStrip({ game }: { game: Game }) {
   const b = rank[1]?.score ?? 0;
   const tense = started && left <= 2 && a - b <= 30;
   return (
-    <div className={`leader-strip ${tense ? 'tense' : ''}`} aria-label={t('rank.title')}>
+    <div
+      className={`leader-strip ${tense ? 'tense' : ''}`}
+      aria-label={t('rank.title')}
+      style={{ ['--cols' as string]: rank.length <= 3 ? rank.length : rank.length <= 6 ? 3 : 4 }}
+    >
       {rank.map((r) => {
         const p = playerById(game, r.id);
         if (!p) return null;
         return (
           <div key={r.id} className={`leader-chip ${started && r.rank === 1 ? 'first' : ''}`}>
-            <Avatar player={p} size={28} />
-            {started && r.rank === 1 && <Crown size={16} />}
-            <span>{p.name}</span>
+            <Avatar player={p} size={24} />
+            {started && r.rank === 1 && <Crown size={14} />}
+            <span className="chip-name">{p.name}</span>
             <b className="num">{r.score}</b>
           </div>
         );

@@ -109,8 +109,8 @@ export function SpecialCards({ game, round, setters }: { game: Game; round: Roun
 
   return (
     <section className="card pad special" aria-label={t('special.title')}>
-      <div className="row" style={{ flexWrap: 'wrap', gap: 'var(--sp-2)' }}>
-        <strong style={{ marginRight: 'var(--sp-2)' }}>{t('special.title')}</strong>
+      <strong>{t('special.title')}</strong>
+      <div className="chip-scroll">
         {chips.map(([k, label]) => (
           <button key={k} type="button" className="chip special-chip" aria-pressed={open.has(k)} onClick={() => toggle(k)}>
             {open.has(k) ? <Icon name="check" size={14} /> : <Icon name="plus" size={14} />} {label}

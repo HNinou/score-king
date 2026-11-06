@@ -190,6 +190,8 @@ export type Scene =
 
 export interface SceneReel {
   scenes: Scene[];
+  /** Combientième fois ce genre de scène dans la partie (1 = première). */
+  nth: number[];
   /** 1 = début de partie, 3 = fin de partie ou manche explosive. */
   intensity: 1 | 2 | 3;
 }
@@ -222,8 +224,28 @@ export function roundScenes(g: Game, r: Round): SceneReel {
     const before = gameRanking(g, r.index).find((x) => x.rank === 1)?.id;
     if (before && before !== to) scenes.push({ kind: 'crownSteal', from: before, to });
   }
-  // au-delà de 3 scènes, on garde les plus spectaculaires
+  // on garde les plus spectaculaires : 2 scènes max (3 en fin de partie) pour ne pas ralentir la table
   const order: Scene['kind'][] = ['kraken', 'whale', 'skullFeast', 'mermaidDrown', 'crownSteal', 'shipwreck', 'lootPact', 'ghost'];
   scenes.sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind));
-  return { scenes: scenes.slice(0, intensity === 3 ? 4 : 3), intensity };
+  const kept = scenes.slice(0, intensity === 3 ? 3 : 2);
+  const before = earlierSceneCounts(g, r);
+  return { scenes: kept, nth: kept.map((x) => (before[x.kind] ?? 0) + 1), intensity };
+}
+
+/** Nombre de fois où chaque grand événement est déjà arrivé avant cette manche. */
+function earlierSceneCounts(g: Game, r: Round): Partial<Record<Scene['kind'], number>> {
+  const c: Partial<Record<Scene['kind'], number>> = {};
+  const inc = (k: Scene['kind'], n = 1) => (c[k] = (c[k] ?? 0) + n);
+  for (const x of g.rounds.slice(0, r.index)) {
+    if (x.phase !== 'done' || x.voided) continue;
+    if (x.destroyedTricks > 0 && g.settings.expansions.kraken) inc('kraken');
+    if (x.destroyedTricks > 0 && g.settings.expansions.whiteWhale && (x.destroyedTricks > 1 || !g.settings.expansions.kraken)) inc('whale');
+    for (const e of x.entries) {
+      if (e.bonus.piratesBySkullKing > 0) inc('skullFeast');
+      if (e.bonus.skullKingByMermaid) inc('mermaidDrown');
+    }
+    const sc = roundScores(g, x);
+    inc('shipwreck', Object.values(sc).filter((v) => v.total <= -50).length);
+  }
+  return c;
 }

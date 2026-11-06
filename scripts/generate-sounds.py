@@ -457,6 +457,18 @@ def chomp(rng):
     return finish(x, 0.03)
 
 
+def yoho(rng):
+    """« Yo… ho… HO ! » : trois coups de tambour de bord (le dernier avec cloche et corne) pour l'annonce des paris."""
+    x = buf(1.6)
+    for k, at in enumerate((0.0, 0.55, 1.1)):
+        g = 0.6 + 0.2 * k
+        add(x, tone(0, 0.35, 0.001, 9, glide=(130, 55)), at, g)
+        add(x, noise(0.08, rng, 40, 0.5, 0.1), at, g * 0.5)
+    add(x, bell(784, 0.5), 1.1, 0.4)
+    add(x, foghorn(110, 0.35), 1.12, 0.3)
+    return finish(x, 0.1)
+
+
 def twang(rng):
     """Cordage qui claque (mât, gréement)."""
     return finish(rope_twang(0.7, 160), 0.08)
@@ -488,6 +500,7 @@ def main() -> None:
         "kraken-roar": (kraken_roar(rng), 0),
         "chomp": (chomp(rng), -2),
         "twang": (twang(rng), -2),
+        "yoho": (yoho(rng), 0),
     }
     for name, (x, gain) in sounds.items():
         save(name, x, gain)

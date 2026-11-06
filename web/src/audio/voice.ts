@@ -80,6 +80,33 @@ class VoiceService {
     }
   }
 
+  /** Fait parler un personnage avec sa propre voix (choisie parmi les voix françaises locales). */
+  sayAs(text: string, who: { names: string[]; pitch: number; rate: number }): void {
+    if (!this.enabled || !text || typeof speechSynthesis === 'undefined') return;
+    const voices = speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith('fr') && v.localService);
+    let v: SpeechSynthesisVoice | undefined;
+    for (const name of who.names) {
+      v = voices.find((x) => x.name.includes(name) && x.lang === 'fr-FR') ?? voices.find((x) => x.name.includes(name));
+      if (v) break;
+    }
+    v = v ?? this.voice ?? voices[0];
+    if (!v) return;
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(speakable(text));
+      u.voice = v;
+      u.lang = v.lang;
+      u.volume = this.volume;
+      u.pitch = who.pitch;
+      u.rate = who.rate;
+      u.onstart = () => this.onSpeak?.(true);
+      u.onend = () => this.onSpeak?.(false);
+      speechSynthesis.speak(u);
+    } catch {
+      // synthèse vocale indisponible
+    }
+  }
+
   stop(): void {
     if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
   }

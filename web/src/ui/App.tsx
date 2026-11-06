@@ -209,6 +209,7 @@ export function App() {
                   <span className="round-sub num">/{game.settings.cardsPerRound.length}</span>
                 </div>
               </div>
+
               <span className="spacer" />
               <button className="icon-btn" type="button" onClick={undo} disabled={!canUndo} aria-label={t('game.undo')} title={t('game.undo')}>
                 <Icon name="undo" />

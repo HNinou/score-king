@@ -479,6 +479,31 @@
     "home.lightsOff": "Éteindre la lanterne",
     "home.lightsOn": "Rallumer la lanterne",
     "settings.music": "Musique d'ambiance",
-    "settings.musicVolume": "Volume de la musique"
+    "settings.musicVolume": "Volume de la musique",
+    "deal.who": "{nom} distribue",
+    "deal.cards": "carte(s) chacun",
+    "deal.lead": "{nom} entame",
+    "deal.hint": "Tout le monde cache son pari dans le poing… et on révèle ensemble.",
+    "deal.yoho": "Yo-ho-ho !",
+    "yoho.1": "YO…",
+    "yoho.2": "HO…",
+    "yoho.3": "HO !",
+    "settings.express": "Mode express (sans scènes ni annonce entre les manches)",
+    "scene.again": "encore ! ×{n}",
+    "round.cardsShort": "{n} cartes"
+  },
+  "pirates": {
+    "redbeard": "Barbe-Rousse, pour vous servir… et vous dépouiller !",
+    "glasseye": "J'ai qu'un œil, mais il voit toutes vos cartes.",
+    "coral": "Capitaine Corail. On vise le trésor, pas la vaisselle.",
+    "oldsalt": "Le Vieux Sel… j'ai perdu plus de paris que t'as de dents.",
+    "scarlet": "Anne la Rouge. Pas de quartier, pas de pitié.",
+    "barrel": "Gros-Tonneau ! Quelqu'un a parlé de buffet ?",
+    "blackpearl": "Perle Noire. Discrète, rapide, et toujours devant.",
+    "revenant": "Je suis revenu d'entre les morts… pour une partie de cartes.",
+    "parrot": "Coco veut du butin ! Coco veut du butin !",
+    "mad": "Sabre-Fou ! On coupe, on tranche, on gagne !",
+    "cabinboy": "Mousse Malin, au rapport ! C'est ma première traversée…",
+    "kraken": "Dame Kraken. Je vous attends… au fond."
   }
 }

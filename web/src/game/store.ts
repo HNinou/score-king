@@ -27,6 +27,7 @@ export interface Prefs {
   speech: boolean;
   music: boolean;
   musicVolume: number;
+  express: boolean;
 }
 
 export interface AppState extends StoredState {
@@ -44,6 +45,7 @@ export const DEFAULT_PREFS: Prefs = {
   speech: true,
   music: true,
   musicVolume: 0.5,
+  express: false,
 };
 
 export type GameAction =
@@ -301,6 +303,7 @@ function readPrefs(x: unknown): Partial<Prefs> {
   if (typeof o.retro === 'boolean') out.retro = o.retro;
   if (typeof o.speech === 'boolean') out.speech = o.speech;
   if (typeof o.music === 'boolean') out.music = o.music;
+  if (typeof o.express === 'boolean') out.express = o.express;
   if (typeof o.musicVolume === 'number' && o.musicVolume >= 0 && o.musicVolume <= 1) out.musicVolume = o.musicVolume;
   return out;
 }

@@ -86,7 +86,7 @@ export function RecapScreen({ game, round, onFinish }: { game: Game; round: Roun
   const reel = useMemo(() => roundScenes(game, round), [game, round]);
   const prefs = useStore().state.prefs;
   const [cinema, setCinema] = useState(
-    () => reel.scenes.length > 0 && !prefs.reducedMotion && !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    () => reel.scenes.length > 0 && !prefs.express && !prefs.reducedMotion && !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   );
 
   const quipText = useMemo(() => {
@@ -130,7 +130,18 @@ export function RecapScreen({ game, round, onFinish }: { game: Game; round: Roun
       </ol>
       <div className="footer-bar">
         <div className="stack" style={{ gap: 'var(--sp-2)' }}>
-          <button className="btn primary block" type="button" onClick={() => setShow(true)}>
+          <button
+            className="btn primary block"
+            type="button"
+            onClick={() => {
+              if (!prefs.express) setShow(true);
+              else if (finished) onFinish();
+              else {
+                store.dispatch({ type: 'nextRound' });
+                window.scrollTo({ top: 0 });
+              }
+            }}
+          >
             {finished ? t('recap.finish') : t('recap.next')}
           </button>
           <button className="btn ghost block" type="button" onClick={() => setEdit(true)}>
@@ -184,6 +195,18 @@ function RankingShow({
   const prevTotals = gameTotals(game, round.index);
   const [stage, setStage] = useState(0);
   const [medals, setMedals] = useState(0);
+  const doneRef = useRef(onDone);
+  doneRef.current = onDone;
+  const showRef = useRef<HTMLDivElement>(null);
+  // un tap n'importe où passe l'annonce (sauf sur le bouton, qui le fait déjà)
+  useEffect(() => {
+    const el = showRef.current;
+    const h = (e: MouseEvent) => {
+      if (!(e.target instanceof HTMLElement && e.target.closest('button'))) doneRef.current();
+    };
+    el?.addEventListener('click', h);
+    return () => el?.removeEventListener('click', h);
+  }, []);
 
   useEffect(() => {
     const timers: number[] = [];
@@ -198,6 +221,7 @@ function RankingShow({
         audio.play('tap-wood');
       }),
     );
+    at(1500 + next.length * 220 + 5200, () => doneRef.current());
     at(1500 + next.length * 220 + 100, () => {
       setStage(2);
       voice.say([leaderTextRef.current, remarkRef.current, lastTextRef.current].filter(Boolean).join(' … '));
@@ -231,7 +255,7 @@ function RankingShow({
   const revealFrom = next.length - medals; // les médailles apparaissent du bas vers le haut
 
   return (
-    <div className="show" role="dialog" aria-modal="true" aria-label={t('rank.title')}>
+    <div className="show" role="dialog" aria-modal="true" aria-label={t('rank.title')} ref={showRef}>
       <div className="show-rays" />
       <h2 className="show-title">{t('rank.title')}</h2>
       <p className="show-sub">{t('rank.subtitle', { r: round.index + 1 })}</p>

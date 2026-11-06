@@ -97,10 +97,63 @@ function RoundHeader({ game, round, onIncident }: { game: Game; round: Round; on
   );
 }
 
+// ------------------------------------------------------------ donne et rituel « Yo-ho-ho »
+
+/** Début de manche : qui distribue, combien de cartes (l'info dont la table a besoin en premier). */
+function DealCard({ game, round, onYoho }: { game: Game; round: Round; onYoho: () => void }) {
+  const dealer = dealerOf(game, round.index);
+  const lead = leadOf(game, round.index);
+  if (!dealer) return null;
+  return (
+    <section className="card deal anim-rise" aria-label={t('deal.who', { nom: dealer.name })}>
+      <div className="deal-row">
+        <Avatar player={dealer} size={56} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="deal-who">{t('deal.who', { nom: dealer.name })}</div>
+          <div className="deal-n">
+            <span className="num">{round.cardsDealt}</span> {t('deal.cards')}
+          </div>
+        </div>
+        <div className="card-fan" aria-hidden="true">
+          {Array.from({ length: Math.min(5, round.cardsDealt) }, (_, k) => (
+            <span key={k} style={{ ['--k' as string]: k - (Math.min(5, round.cardsDealt) - 1) / 2 }} />
+          ))}
+        </div>
+      </div>
+      <p className="muted" style={{ margin: 'var(--sp-2) 0' }}>
+        {lead && t('deal.lead', { nom: lead.name })}. {t('deal.hint')}
+      </p>
+      <button className="btn primary block" type="button" onClick={onYoho}>
+        {t('deal.yoho')}
+      </button>
+    </section>
+  );
+}
+
+/** Compte à rebours pour révéler les paris tous ensemble, comme à la table. */
+function YohoOverlay({ onDone }: { onDone: () => void }) {
+  const [k, setK] = useState(0);
+  const done = useRef(onDone);
+  done.current = onDone;
+  useEffect(() => {
+    audio.play('yoho', { force: true });
+    const ts = [window.setTimeout(() => setK(1), 550), window.setTimeout(() => setK(2), 1100), window.setTimeout(() => done.current(), 1900)];
+    return () => ts.forEach((x) => window.clearTimeout(x));
+  }, []);
+  return (
+    <div className="yoho" role="alert">
+      <span key={k} className={`yoho-word w${k}`}>
+        {t(`yoho.${k + 1}`)}
+      </span>
+    </div>
+  );
+}
+
 // ------------------------------------------------------------ paris
 function BidsPhase({ game, round, onIncident }: { game: Game; round: Round; onIncident: () => void }) {
   const [active, setActive] = useState(() => Math.max(0, firstMissing(game, round, 'bid')));
   const [pass, setPass] = useState(false);
+  const [yoho, setYoho] = useState(false);
   const rowRefs = useRef<(HTMLLIElement | null)[]>([]);
   const n = round.cardsDealt;
   const missing = round.entries.filter((e) => e.bid === null).length;
@@ -157,6 +210,7 @@ function BidsPhase({ game, round, onIncident }: { game: Game; round: Round; onIn
   if (pass) {
     return <PassAround game={game} round={round} onExit={() => setPass(false)} onPick={pick} />;
   }
+  const fresh = round.entries.every((x) => x.bid === null);
 
   return (
     <main className="screen">
@@ -169,6 +223,8 @@ function BidsPhase({ game, round, onIncident }: { game: Game; round: Round; onIn
       </div>
       <RoundHeader game={game} round={round} onIncident={onIncident} />
       {lastQuip && <p className="quip">{lastQuip}</p>}
+      {fresh && <DealCard game={game} round={round} onYoho={() => setYoho(true)} />}
+      {yoho && <YohoOverlay onDone={() => setYoho(false)} />}
       <ol className="stack" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
         {round.entries.map((e, i) => {
           const p = playerById(game, e.playerId);
@@ -180,23 +236,21 @@ function BidsPhase({ game, round, onIncident }: { game: Game; round: Round; onIn
               ref={(el) => {
                 rowRefs.current[i] = el;
               }}
-              className={`card prow ${i === active ? 'active' : ''}`}
+              className={`card prow compact ${i === active ? 'active' : ''}`}
               onFocus={() => setActive(i)}
               onPointerDown={() => setActive(i)}
             >
-              <Avatar player={p} size={44} />
-              <div style={{ minWidth: 0 }}>
-                <div className="name">
+              <div className="pline">
+                <Avatar player={p} size={32} />
+                <span className="name">
                   <span>{p.name}</span>
-                  {isDealer && <span className="dealer-badge">{t('setup.dealerBadge')}</span>}
-                </div>
+                </span>
+                {isDealer && <span className="dealer-badge">{t('setup.dealerBadge')}</span>}
+                <span className="value" aria-live="polite">
+                  {e.bid ?? '–'}
+                </span>
               </div>
-              <div className="value" aria-live="polite">
-                {e.bid ?? '–'}
-              </div>
-              <div className="full">
-                <NumberGrid max={n} value={e.bid} label={t('bids.bidOf', { nom: p.name })} onPick={(v) => pick(i, v)} />
-              </div>
+              <NumberGrid max={n} value={e.bid} label={t('bids.bidOf', { nom: p.name })} onPick={(v) => pick(i, v)} />
               {cannon && e.bid !== null && (
                 <div className="full seg">
                   {(['grapeshot', 'cannonball'] as const).map((c) => (
@@ -419,47 +473,47 @@ export function TricksPanel({
           const bonusPts = rawBonus(e.bonus, rules);
           const errs = (Object.keys(v.players) as ErrorCode[]).filter((c) => v.players[c]?.includes(p.id));
           return (
-            <li key={p.id} className={`card prow ${i === active ? 'active' : ''}`} onPointerDown={() => setActive(i)} onFocus={() => setActive(i)}>
-              <Avatar player={p} size={44} />
-              <div style={{ minWidth: 0 }}>
-                <div className="name">{p.name}</div>
-                <div className="meta num">
+            <li key={p.id} className={`card prow compact ${i === active ? 'active' : ''}`} onPointerDown={() => setActive(i)} onFocus={() => setActive(i)}>
+              <div className="pline">
+                <Avatar player={p} size={32} />
+                <span className="name">
+                  <span>{p.name}</span>
+                </span>
+                <span className="bid-pill num">
                   {t('recap.bid')} {effectiveBid(e) ?? '–'}
                   {e.harryAdjustment !== 0 && ` (${e.bid ?? 0}${e.harryAdjustment > 0 ? '+' : '−'}${Math.abs(e.harryAdjustment)})`}
-                  {diff !== null && (
-                    <>
-                      {' · '}
-                      <span key={`${diff}`} className={`status ${diff === 0 ? 'pos' : 'neg'}`}>
-                        <Icon name={diff === 0 ? 'check' : 'cross'} size={16} />
-                        {diff === 0 ? t('tricks.made') : t('tricks.missedBy', { x: diff })}
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
-              <div className="value" aria-live="polite">
-                {e.tricks ?? '–'}
+                </span>
+                <span className="value" aria-live="polite">
+                  {e.tricks ?? '–'}
+                </span>
               </div>
               {editBids && (
-                <div className="full">
-                  <div className="muted" style={{ fontSize: 'var(--fs-xs)', marginBottom: 4 }}>
+                <>
+                  <span className="muted" style={{ fontSize: 'var(--fs-xs)' }}>
                     {t('bids.bidOf', { nom: p.name })}
-                  </div>
+                  </span>
                   <NumberGrid max={n} value={e.bid} label={t('bids.bidOf', { nom: p.name })} onPick={(x) => setters.setBid(p.id, x)} />
-                  <div className="muted" style={{ fontSize: 'var(--fs-xs)', margin: '8px 0 4px' }}>
+                  <span className="muted" style={{ fontSize: 'var(--fs-xs)' }}>
                     {t('tricks.tricksOf', { nom: p.name })}
-                  </div>
-                </div>
+                  </span>
+                </>
               )}
-              <div className="full">
-                <NumberGrid max={n} value={e.tricks} label={t('tricks.tricksOf', { nom: p.name })} onPick={(x) => pick(i, x)} />
-              </div>
-              <div className="full row" style={{ flexWrap: 'wrap' }}>
+              <NumberGrid max={n} value={e.tricks} label={t('tricks.tricksOf', { nom: p.name })} onPick={(x) => pick(i, x)} />
+              <div className="pline sub">
+                {diff !== null ? (
+                  <span key={`${diff}`} className={`status ${diff === 0 ? 'pos' : 'neg'}`}>
+                    <Icon name={diff === 0 ? 'check' : 'cross'} size={16} />
+                    {diff === 0 ? t('tricks.made') : t('tricks.missedBy', { x: diff })}
+                  </span>
+                ) : (
+                  <span />
+                )}
+                <span className="spacer" />
+                {bonusPts > 0 && <span className="bonus-badge num anim-pop">+{bonusPts}</span>}
                 <button className="chip" type="button" disabled={!e.tricks} onClick={() => setBonusFor(p.id)}>
                   + {t('tricks.bonus')}
                 </button>
-                {bonusPts > 0 && <span className="bonus-badge num anim-pop">+{bonusPts}</span>}
-                {game.settings.scoring === 'rascal' && game.settings.cannonEnabled && (
+              {game.settings.scoring === 'rascal' && game.settings.cannonEnabled && (
                   <span className="muted" style={{ fontSize: 'var(--fs-s)' }}>
                     <Icon name={e.cannon === 'cannonball' ? 'fist' : 'hand'} size={16} /> {t(`cannon.${e.cannon}`)}
                   </span>

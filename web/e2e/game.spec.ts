@@ -278,3 +278,13 @@ test('13. annonce du classement : une remarque vise un joueur', async ({ page })
   await expect(show.locator('.bubble')).toBeVisible({ timeout: 6000 });
   await expect(show.locator('.show-row.targeted')).toHaveCount(1);
 });
+
+test('14. six joueurs : partie lancée, tout le monde visible en haut', async ({ page }) => {
+  const names = ['Anne', 'Bart', 'Cléo', 'Dédé', 'Eli', 'Fanny'];
+  await newGame(page, names);
+  await expect(page.locator('.leader-chip')).toHaveCount(6);
+  for (const chip of await page.locator('.leader-chip').all()) await expect(chip).toBeInViewport();
+  await playRound(page, names, [0, 0, 0, 0, 0, 1], [0, 0, 0, 0, 0, 1]);
+  expect(await scoreOf(page, 'Fanny')).toBe(20);
+  expect(await scoreOf(page, 'Anne')).toBe(10);
+});
