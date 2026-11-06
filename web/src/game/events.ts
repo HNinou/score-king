@@ -16,6 +16,8 @@ export interface PlayerFact {
   tricks: number;
   bonusCards: number;
   piratesBySK: number;
+  /** Bonus de la seule capture marquante (pirates mangés ou Roi noyé), lu dans le moteur. */
+  captureBonus: number;
   rankBefore: number;
   rankAfter: number;
 }
@@ -49,7 +51,21 @@ export const FACT_QUIP: Partial<Record<FactKind, EventKey>> = {
   zeroBidMade: 'zeroBidMade',
   zeroBidMissed: 'zeroBidMissed',
   bidMade: 'bidMade',
+  bidMissed: 'bidMissed',
 };
+
+/** Variables des répliques : les pertes gardent leur signe, les bonus sont ceux de la capture citée. */
+export function factVars(g: Game, f: PlayerFact): Record<string, string | number> {
+  const abs = Math.abs(f.result.total);
+  return {
+    nom: g.players.find((p) => p.id === f.playerId)?.name ?? '',
+    points: f.result.total < 0 ? `−${abs}` : String(abs),
+    plis: f.tricks,
+    bonus: f.captureBonus,
+    nb: f.piratesBySK,
+    x: f.diff,
+  };
+}
 
 export function roundFacts(g: Game, r: Round): PlayerFact[] {
   const scores = roundScores(g, r);
@@ -66,9 +82,9 @@ export function roundFacts(g: Game, r: Round): PlayerFact[] {
     if (diff === 0 && e.bonus.skullKingByMermaid) kind = 'mermaidCapture';
     else if (diff === 0 && e.bonus.piratesBySkullKing > 0) kind = 'skullKingCapture';
     else if (result.total <= -50) kind = 'bigLoss';
+    else if (diff !== 0 && g.settings.scoring === 'rascal' && result.total > 0) kind = 'grazed';
     else if (bid === 0) kind = diff === 0 ? 'zeroBidMade' : 'zeroBidMissed';
     else if (diff === 0) kind = 'bidMade';
-    else if (diff === 1 && g.settings.scoring === 'rascal' && result.total > 0) kind = 'grazed';
     else kind = 'bidMissed';
     return {
       playerId: e.playerId,
@@ -78,6 +94,12 @@ export function roundFacts(g: Game, r: Round): PlayerFact[] {
       tricks,
       bonusCards: diff === 0 ? rawBonus(e.bonus, rules) : 0,
       piratesBySK: e.bonus.piratesBySkullKing,
+      captureBonus:
+        kind === 'mermaidCapture'
+          ? rawBonus({ skullKingByMermaid: true }, rules)
+          : kind === 'skullKingCapture'
+            ? rawBonus({ piratesBySkullKing: e.bonus.piratesBySkullKing }, rules)
+            : 0,
       rankBefore: rankIn(before, e.playerId),
       rankAfter: rankIn(after, e.playerId),
     };
@@ -126,10 +148,9 @@ const lastTarget = new Map<string, string>();
  */
 export function spotlight(g: Game, r: Round, exclude: string | undefined, rnd: () => number = Math.random): Spotlight | null {
   const facts = roundFacts(g, r);
-  const name = (id: string) => g.players.find((p) => p.id === id)?.name ?? '';
   const cands: { s: Spotlight; w: number }[] = [];
   for (const f of facts) {
-    const base = { nom: name(f.playerId), points: Math.abs(f.result.total), plis: f.tricks, bonus: f.bonusCards, nb: f.piratesBySK, x: f.diff };
+    const base = factVars(g, f);
     const moved = r.index === 0 ? 0 : f.rankBefore - f.rankAfter;
     const streak = streakOf(g, r, f.playerId);
     const add = (key: EventKey, w: number, vars = base) => cands.push({ s: { playerId: f.playerId, key, vars }, w });
@@ -137,8 +158,7 @@ export function spotlight(g: Game, r: Round, exclude: string | undefined, rnd: (
     if (moved <= -2) add('rankDown', 5, { ...base, x: -moved });
     if (streak >= 3) add('streak', 4 + streak, { ...base, x: streak });
     const quipKey = FACT_QUIP[f.kind];
-    if (quipKey) add(quipKey, f.kind === 'bidMade' ? 1 : 3);
-    if (f.kind === 'bidMissed') add('bidMissed', f.diff >= 2 ? 3 : 2);
+    if (quipKey) add(quipKey, f.kind === 'bidMade' ? 1 : f.kind === 'bidMissed' ? (f.diff >= 2 ? 3 : 2) : 3);
   }
   const prev = lastTarget.get(g.id);
   let pool = cands.filter((c) => c.s.playerId !== exclude && c.s.playerId !== prev);
@@ -154,4 +174,56 @@ export function spotlight(g: Game, r: Round, exclude: string | undefined, rnd: (
     }
   }
   return null;
+}
+
+// ------------------------------------------------------------ scènes animées de fin de manche
+
+export type Scene =
+  | { kind: 'kraken'; tricks: number }
+  | { kind: 'whale' }
+  | { kind: 'skullFeast'; playerId: string; heads: number }
+  | { kind: 'mermaidDrown'; playerId: string }
+  | { kind: 'lootPact'; a: string; b: string }
+  | { kind: 'shipwreck'; playerId: string; points: number }
+  | { kind: 'ghost'; playerId: string }
+  | { kind: 'crownSteal'; from: string; to: string };
+
+export interface SceneReel {
+  scenes: Scene[];
+  /** 1 = début de partie, 3 = fin de partie ou manche explosive. */
+  intensity: 1 | 2 | 3;
+}
+
+/** Ce qui s'est réellement passé dans la manche, mis en scène — plus fort à mesure que la partie avance. */
+export function roundScenes(g: Game, r: Round): SceneReel {
+  const facts = roundFacts(g, r);
+  const total = g.settings.cardsPerRound.length;
+  const progress = (r.index + 1) / total;
+  const swing = Math.max(0, ...facts.map((f) => Math.abs(f.result.total)));
+  const intensity: 1 | 2 | 3 = progress > 0.75 || swing >= 120 ? 3 : progress > 0.4 || swing >= 70 ? 2 : 1;
+  const scenes: Scene[] = [];
+  const exp = g.settings.expansions;
+
+  if (r.destroyedTricks > 0) {
+    if (exp.kraken) scenes.push({ kind: 'kraken', tricks: 1 });
+    if (exp.whiteWhale && (r.destroyedTricks > 1 || !exp.kraken)) scenes.push({ kind: 'whale' });
+  }
+  // les captures ne comptent que si le pari est tenu… mais la carte a bien été jouée : on la montre quand même
+  for (const e of r.entries) {
+    if (e.bonus.piratesBySkullKing > 0) scenes.push({ kind: 'skullFeast', playerId: e.playerId, heads: e.bonus.piratesBySkullKing });
+    if (e.bonus.skullKingByMermaid) scenes.push({ kind: 'mermaidDrown', playerId: e.playerId });
+  }
+  const exact = (pid: string) => facts.find((f) => f.playerId === pid)?.diff === 0;
+  for (const a of r.lootAlliances) if (exact(a.playedBy) && exact(a.capturedBy)) scenes.push({ kind: 'lootPact', a: a.playedBy, b: a.capturedBy });
+  for (const f of facts) if (f.result.total <= -50) scenes.push({ kind: 'shipwreck', playerId: f.playerId, points: f.result.total });
+  for (const f of facts) if (f.kind === 'zeroBidMade' && r.cardsDealt >= 5) scenes.push({ kind: 'ghost', playerId: f.playerId });
+  const to = newLeader(g, r);
+  if (to) {
+    const before = gameRanking(g, r.index).find((x) => x.rank === 1)?.id;
+    if (before && before !== to) scenes.push({ kind: 'crownSteal', from: before, to });
+  }
+  // au-delà de 3 scènes, on garde les plus spectaculaires
+  const order: Scene['kind'][] = ['kraken', 'whale', 'skullFeast', 'mermaidDrown', 'crownSteal', 'shipwreck', 'lootPact', 'ghost'];
+  scenes.sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind));
+  return { scenes: scenes.slice(0, intensity === 3 ? 4 : 3), intensity };
 }

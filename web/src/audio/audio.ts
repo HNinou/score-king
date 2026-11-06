@@ -14,7 +14,10 @@ export type SoundId =
   | 'rewind'
   | 'chest-fanfare'
   | 'drumroll'
-  | 'whoosh';
+  | 'whoosh'
+  | 'kraken-roar'
+  | 'chomp'
+  | 'twang';
 
 const VARIANTS: Partial<Record<SoundId, number>> = { 'tap-wood': 3, coins: 3, splash: 2 };
 export const PRIORITY: Record<SoundId, number> = {
@@ -33,6 +36,9 @@ export const PRIORITY: Record<SoundId, number> = {
   'siren-song': 6,
   drumroll: 6,
   'chest-fanfare': 7,
+  chomp: 1,
+  twang: 1,
+  'kraken-roar': 6,
 };
 
 class AudioService {
@@ -43,6 +49,8 @@ class AudioService {
   private ready = false;
   enabled = true;
   volume = 0.8;
+  /** 0 = début de partie, 1 = dernière manche : les sons deviennent plus aigus et nerveux. */
+  intensity = 0;
   /** Espion pour les tests : chaque son effectivement joué. */
   played: SoundId[] = [];
 
@@ -65,7 +73,7 @@ class AudioService {
     this.volume = v;
   }
 
-  play(id: SoundId, opts: { force?: boolean } = {}): void {
+  play(id: SoundId, opts: { force?: boolean; rate?: number } = {}): void {
     if (!this.enabled) return;
     const now = performance.now();
     const pr = PRIORITY[id];
@@ -84,10 +92,14 @@ class AudioService {
     if (!base) return;
     const el = base.cloneNode(true) as HTMLAudioElement;
     el.volume = this.volume;
+    // jamais deux fois le même : hauteur un peu aléatoire, qui monte avec la tension de la partie
+    const jitter = 1 + (Math.random() - 0.5) * (id === 'tap-wood' ? 0.3 : 0.12);
+    el.preservesPitch = false;
+    el.playbackRate = Math.min(1.6, Math.max(0.6, (opts.rate ?? 1) * jitter * (1 + 0.14 * this.intensity)));
     void el.play().catch(() => undefined);
     if (pr > 0) {
       const d = Number.isFinite(base.duration) ? base.duration : 1;
-      this.busyUntil = now + d * 1000;
+      this.busyUntil = now + (d * 1000) / el.playbackRate;
       this.busyPriority = pr;
     }
   }

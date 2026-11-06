@@ -6,8 +6,12 @@ import { Avatar, Crown } from './common';
 export function LeaderStrip({ game }: { game: Game }) {
   const rank = gameRanking(game);
   const started = rank.some((r) => r.score !== 0);
+  const left = game.settings.cardsPerRound.length - game.rounds.filter((r) => r.phase === 'done').length;
+  const a = rank[0]?.score ?? 0;
+  const b = rank[1]?.score ?? 0;
+  const tense = started && left <= 2 && a - b <= 30;
   return (
-    <div className="leader-strip" aria-label={t('rank.title')}>
+    <div className={`leader-strip ${tense ? 'tense' : ''}`} aria-label={t('rank.title')}>
       {rank.map((r) => {
         const p = playerById(game, r.id);
         if (!p) return null;

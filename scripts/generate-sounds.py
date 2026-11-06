@@ -108,168 +108,315 @@ def save(name: str, x: list[float], gain_db: float = 0.0) -> None:
         w.writeframes(b"".join(struct.pack("<h", int(max(-1, min(1, v * g)) * 32767)) for v in x))
 
 
-# --------------------------------------------------------------------------- recettes
+# --------------------------------------------------------------------------- outils « déjantés »
 
-def tap_wood(rng, pitch):
-    """« Toc » de bois : partiels inharmoniques très courts + clic de bruit."""
-    x = tone(pitch, 0.09, 0.001, 55, ((1, 1), (2.3, 0.5), (4.1, 0.25)))
-    add(x, noise(0.02, rng, 160, 0.6, 0.2), 0, 0.4)
-    return finish(x, 0.01)
+def bitcrush(x, bits=6, hold=3):
+    """Son lo-fi façon vieille console : moins de bits, échantillons répétés."""
+    q = 2 ** (bits - 1)
+    out = []
+    last = 0.0
+    for i, v in enumerate(x):
+        if i % hold == 0:
+            last = round(v * q) / q
+        out.append(last)
+    return out
+
+
+def highpass_noise(seconds, rng, decay=6.0, a=0.001):
+    lp = noise(seconds, rng, 0, 0.2, 0.2, a=0.0)
+    n = len(lp)
+    out = [0.0] * n
+    y = 0.0
+    for i in range(n):
+        v = rng.uniform(-1, 1)
+        y += 0.25 * (v - y)
+        out[i] = (v - y) * env(i, n, a, decay)
+    return out
+
+
+def bloop(f0, f1, seconds=0.08):
+    return tone(0, seconds, 0.002, 18, ((1, 1), (2, 0.2)), glide=(f0, f1))
 
 
 def bell(f0, seconds=1.2):
     return tone(f0, seconds, 0.002, 3.2, ((1, 1), (2.76, 0.5), (5.4, 0.25), (8.9, 0.1)))
 
 
+def accordion(freq, seconds, decay=1.2):
+    """Accordéon de chant de marin : deux anches légèrement désaccordées, effet « musette »."""
+    n = int(SR * seconds)
+    out = [0.0] * n
+    p1 = p2 = 0.0
+    for i in range(n):
+        t = i / SR
+        p1 += freq / SR
+        p2 += freq * 1.006 / SR
+        a = 2 * (p1 % 1.0) - 1
+        b = 2 * (p2 % 1.0) - 1
+        s = math.tanh(1.6 * (a + b) * 0.5 + 0.3 * math.sin(TAU * 2 * p1))
+        out[i] = s * env(i, n, 0.03, decay) * (1 + 0.12 * math.sin(TAU * 5.5 * t))
+    return out
+
+
+def seagull(seconds=0.4, f0=1500):
+    """Mouette qui se moque : cri aigu « kiyaa » qui retombe, en deux temps."""
+    n = int(SR * seconds)
+    out = [0.0] * n
+    ph = 0.0
+    for i in range(n):
+        k = i / n
+        f = f0 * (1 + 0.5 * math.sin(math.pi * min(1, k * 2.5))) * (1 - 0.45 * k)
+        ph += TAU * f / SR
+        out[i] = math.tanh(2.5 * math.sin(ph) + 0.8 * math.sin(3 * ph)) * env(i, n, 0.01, 4) * (0.7 + 0.3 * math.sin(TAU * 40 * k))
+    return out
+
+
+def parrot_laugh(rng):
+    """Perroquet qui rit : « ha-ha-ha » rauques de plus en plus aigus."""
+    x = buf(0.7)
+    for k in range(4):
+        n = int(SR * 0.09)
+        seg = [0.0] * n
+        ph = 0.0
+        f = 900 + k * 120
+        for i in range(n):
+            ph += TAU * f * (1 + 0.3 * math.sin(TAU * 70 * i / SR)) / SR
+            seg[i] = math.tanh(2.5 * math.sin(ph)) * (0.7 + 0.3 * rng.uniform(-1, 1)) * env(i, n, 0.004, 18)
+        add(x, seg, k * 0.13)
+    return x
+
+
+def foghorn(freq=110, seconds=0.5):
+    """Corne de brume : grave, rauque, un peu ridicule."""
+    n = int(SR * seconds)
+    out = [0.0] * n
+    ph = 0.0
+    for i in range(n):
+        t = i / SR
+        ph += freq * (1 + 0.01 * math.sin(TAU * 4 * t)) / SR
+        a = 2 * (ph % 1.0) - 1
+        out[i] = math.tanh(2.5 * a) * min(1, t / 0.05) * (1 if t < seconds - 0.1 else (seconds - t) / 0.1)
+    return out
+
+
+def rope_twang(seconds=0.6, f=180):
+    """Corde de gréement qui claque (Karplus-Strong)."""
+    n = int(SR * seconds)
+    period = int(SR / f)
+    rng = random.Random(3)
+    buf_ = [rng.uniform(-1, 1) for _ in range(period)]
+    out = [0.0] * n
+    for i in range(n):
+        v = buf_[i % period]
+        nxt = buf_[(i + 1) % period]
+        buf_[i % period] = 0.996 * 0.5 * (v + nxt)
+        out[i] = v * (1 + 0.6 * math.exp(-i / SR * 30))
+    return out
+
+
+def crash(rng, seconds=1.2):
+    """Cymbale."""
+    x = highpass_noise(seconds, rng, 3.5)
+    add(x, tone(5200, seconds, 0.001, 4, ((1, 0.3), (1.37, 0.2), (2.1, 0.15))), 0, 0.5)
+    return x
+
+
+# --------------------------------------------------------------------------- recettes
+
+def tap_wood(rng, pitch):
+    """« Bloop » de bulle lo-fi, hauteur variable (discret)."""
+    x = bloop(pitch, pitch * 2.4, 0.07)
+    add(x, noise(0.012, rng, 200, 0.6, 0.3), 0, 0.3)
+    return finish(bitcrush(x, 8, 2), 0.01)
+
+
 def bell_bids(rng):
-    """Deux coups de cloche de navire."""
-    x = buf(1.4)
-    add(x, bell(660, 1.0), 0)
-    add(x, bell(660, 1.0), 0.32)
-    return finish(x, 0.15)
-
-
-def seal_stamp(rng):
-    """Tampon de cire (coup sourd) + léger ressac."""
-    x = buf(1.1)
-    add(x, tone(90, 0.25, 0.001, 22, ((1, 1), (1.5, 0.4))), 0)
-    add(x, noise(0.06, rng, 60, 0.5, 0.1), 0, 0.6)
-    add(x, noise(0.9, rng, 2.5, 0.05, 0.01, a=0.25), 0.15, 0.5)
-    return finish(x, 0.2)
-
-
-def coins(rng, variant):
-    """Tintement de pièces : 4 à 5 impacts métalliques décalés."""
-    x = buf(0.9)
-    t = 0.0
-    for k in range(4 + variant % 2):
-        f = rng.uniform(2200, 3600)
-        add(x, tone(f, 0.35, 0.001, 14, ((1, 1), (1.51, 0.6), (2.37, 0.35), (3.1, 0.2))), t, rng.uniform(0.6, 1))
-        t += rng.uniform(0.04, 0.09)
-    return finish(x, 0.08)
-
-
-def slide_up(rng):
-    """Flûte à coulisse montante, triomphante."""
-    x = tone(0, 0.9, 0.03, 0.8, ((1, 1), (2, 0.15)), (6, 0.012), (300, 900))
-    add(x, tone(900, 0.25, 0.01, 4, ((1, 1), (2, 0.15)), (6, 0.02)), 0.88)
+    """Sifflet de bosco (trille montante) + coup de cloche + « ta-da » à l'accordéon."""
+    x = buf(1.5)
+    n = int(SR * 0.45)
+    pipe = [0.0] * n
+    ph = 0.0
+    for i in range(n):
+        t = i / SR
+        f = 1600 + 900 * (i / n) + 160 * (1 if math.sin(TAU * 22 * t) > 0 else -1)
+        ph += TAU * f / SR
+        pipe[i] = math.sin(ph) * env(i, n, 0.01, 1)
+    add(x, pipe, 0, 0.45)
+    add(x, bell(660, 0.9), 0.45, 0.8)
+    add(x, accordion(523, 0.14, 2), 0.75, 0.5)
+    add(x, accordion(784, 0.4, 2), 0.9, 0.5)
     return finish(x, 0.12)
 
 
-def splash(rng, variant):
-    """Plouf : bruit passe-bas descendant + bulles sinusoïdales."""
+def seal_stamp(rng):
+    """Gros « BONK » de tampon de cire + corde qui vibre."""
+    x = buf(0.9)
+    add(x, tone(0, 0.35, 0.001, 9, ((1, 1), (2.01, 0.35)), glide=(900, 160)), 0, 1.0)
+    add(x, noise(0.05, rng, 60, 0.7, 0.2), 0, 0.6)
+    add(x, rope_twang(0.45, 140), 0.1, 0.35)
+    return finish(bitcrush(x, 7, 2), 0.1)
+
+
+def coins(rng, variant):
+    """« Ka-ching » de machine à sous : cascade de pièces + arpège de caisse."""
     x = buf(1.0)
-    add(x, noise(0.7, rng, 5, 0.5, 0.02), 0)
-    for k in range(3 + variant):
-        add(x, tone(0, 0.08, 0.002, 30, glide=(rng.uniform(400, 700), rng.uniform(900, 1400))), 0.12 + k * 0.07, 0.35)
-    add(x, tone(0, 0.18, 0.002, 12, glide=(320, 120)), 0, 0.7)
-    return finish(x, 0.15)
+    t = 0.0
+    for k in range(7 + variant):
+        add(x, tone(rng.uniform(2400, 4200), 0.25, 0.001, 16, ((1, 1), (1.51, 0.5), (2.37, 0.3))), t, rng.uniform(0.4, 0.8))
+        t += rng.uniform(0.025, 0.06)
+    base = [1046, 1318, 1568][variant % 3]
+    for k, m in enumerate((1, 1.26, 1.5, 2)):
+        add(x, tone(base * m, 0.18, 0.002, 10, ((1, 1), (3, 0.2))), 0.18 + k * 0.06, 0.45)
+    return finish(bitcrush(x, 7, 2), 0.08)
+
+
+def slide_up(rng):
+    """Sifflet de bosco qui grimpe, triomphant, + deux coups de corne de brume."""
+    x = buf(1.4)
+    n = int(SR * 0.75)
+    pipe = [0.0] * n
+    ph = 0.0
+    for i in range(n):
+        k = i / n
+        f = 700 * (3.2 ** k) * (1 + 0.03 * math.sin(TAU * 18 * i / SR))
+        ph += TAU * f / SR
+        pipe[i] = math.sin(ph) * env(i, n, 0.02, 0.8)
+    add(x, pipe, 0, 0.7)
+    add(x, foghorn(146, 0.16), 0.8, 0.45)
+    add(x, foghorn(146, 0.26), 1.0, 0.5)
+    return finish(x, 0.1)
+
+
+def splash(rng, variant):
+    """Plouf + « glouglou » ; la variante 2 finit sur une mouette moqueuse."""
+    x = buf(1.4)
+    add(x, noise(0.6, rng, 6, 0.55, 0.02), 0, 0.9)
+    add(x, tone(0, 0.2, 0.002, 10, glide=(340, 110)), 0, 0.7)
+    for k in range(4):
+        add(x, bloop(500 - k * 70, 220 - k * 30, 0.12), 0.35 + k * 0.13, 0.6)
+    if variant:
+        add(x, seagull(0.4), 0.9, 0.4)
+    return finish(x, 0.12)
 
 
 def sad_trombone(rng):
-    """Trombone « wah-wah-waaah » : 4 notes descendantes, la dernière avec vibrato."""
+    """Trombone « wah-wah-wah-waaah » puis un perroquet qui se moque."""
     x = buf(1.5)
-    notes = [(293.7, 0.0, 0.28), (277.2, 0.3, 0.28), (261.6, 0.6, 0.28), (246.9, 0.9, 0.6)]
+    notes = [(293.7, 0.0, 0.24), (277.2, 0.25, 0.24), (261.6, 0.5, 0.24), (246.9, 0.75, 0.4)]
     for i, (f, at, d) in enumerate(notes):
-        vib = (5.5, 0.025) if i == 3 else (0, 0)
-        add(x, saw(f, d, 0.04, 1.2, vib, harmonics=8), at, 0.6)
-    return finish(x, 0.15)
+        vib = (6, 0.04) if i == 3 else (0, 0)
+        add(x, saw(f, d, 0.03, 1.4, vib, harmonics=9), at, 0.6)
+    add(x, parrot_laugh(rng), 0.95, 0.45)
+    return finish(x, 0.08)
 
 
 def cannon(rng):
-    """Coup de canon : bruit + basse à décroissance rapide + écho."""
+    """« Fiiiiiou… BOUM » : boulet qui siffle, explosion, débris, cordage qui claque."""
     x = buf(1.5)
-    boom = noise(0.6, rng, 7, 0.4, 0.01)
-    add(boom, tone(0, 0.5, 0.001, 8, glide=(80, 40)), 0, 1.2)
-    add(x, boom, 0)
-    add(x, boom, 0.32, 0.3)
-    add(x, boom, 0.62, 0.1)
-    return finish(x, 0.2)
+    add(x, tone(0, 0.45, 0.02, 0.5, ((1, 1),), glide=(2400, 700)), 0, 0.35)
+    boom = noise(0.6, rng, 6, 0.45, 0.01)
+    add(boom, tone(0, 0.5, 0.001, 7, glide=(90, 35)), 0, 1.3)
+    add(x, bitcrush(boom, 6, 3), 0.42)
+    for k in range(5):
+        add(x, noise(0.03, rng, 80, 0.5, 0.3), 0.7 + k * rng.uniform(0.04, 0.09), 0.25)
+    add(x, rope_twang(0.4, 220), 1.0, 0.3)
+    return finish(x, 0.1)
 
 
 def siren_song(rng):
-    """Glissando éthéré, un peu moqueur."""
+    """Thérémine qui ondule, un peu moqueur, + glissando de harpe."""
     x = buf(1.5)
-    add(x, tone(0, 1.3, 0.15, 1.2, ((1, 1), (2, 0.2), (3, 0.08)), (5, 0.015), (500, 1100)), 0)
-    add(x, tone(0, 1.3, 0.15, 1.2, ((1, 1),), (5.3, 0.015), (750, 1650)), 0.05, 0.35)
-    add(x, tone(1100, 0.3, 0.02, 6, ((1, 1),), (7, 0.03)), 1.1, 0.4)
-    return finish(x, 0.2)
+    add(x, tone(0, 1.2, 0.1, 1.2, ((1, 1), (2, 0.15)), (5.5, 0.04), (420, 1050)), 0, 0.8)
+    for k in range(10):
+        add(x, tone(523 * (2 ** (k / 7)), 0.4, 0.001, 6, ((1, 1), (2, 0.3))), 0.9 + k * 0.035, 0.25)
+    return finish(x, 0.15)
 
 
 def parrot_squawk(rng):
-    """Cri de perroquet indigné : FM aiguë, deux cris."""
+    """Perroquet indigné qui finit par ricaner."""
     def squawk(f0):
-        n = int(SR * 0.18)
+        n = int(SR * 0.16)
         out = [0.0] * n
         ph = mph = 0.0
         for i in range(n):
-            t = i / SR
-            f = f0 * (1 + 0.6 * math.sin(math.pi * i / n))
-            mph += TAU * 90 / SR
-            ph += TAU * f * (1 + 0.35 * math.sin(mph)) / SR
-            out[i] = math.tanh(2.5 * math.sin(ph)) * env(i, n, 0.005, 10)
+            f = f0 * (1 + 0.7 * math.sin(math.pi * i / n))
+            mph += TAU * 110 / SR
+            ph += TAU * f * (1 + 0.4 * math.sin(mph)) / SR
+            out[i] = math.tanh(3 * math.sin(ph)) * env(i, n, 0.004, 12)
         return out
-
-    x = buf(0.6)
+    x = buf(0.8)
     add(x, squawk(1300), 0)
-    add(x, squawk(1550), 0.22)
-    return finish(x, 0.04)
+    add(x, squawk(1700), 0.17)
+    add(x, parrot_laugh(rng), 0.36, 0.6)
+    return finish(bitcrush(x, 7, 2), 0.04)
 
 
-def fanfare(notes, total):
+def shanty_fanfare(notes, total):
     x = buf(total)
     for f, at, d in notes:
-        add(x, saw(f, d, 0.015, 2.2, (5, 0.006), harmonics=10), at, 0.5)
-        add(x, saw(f * 1.5, d, 0.015, 2.2, harmonics=6), at, 0.15)
+        add(x, accordion(f, d, 1.5), at, 0.55)
+        add(x, accordion(f / 2, d, 1.5), at, 0.25)
     return x
 
 
 def new_captain(rng):
-    """Mini-fanfare de cuivres."""
+    """Fanfare de chant de marin à l'accordéon + cloche de bord."""
     c = 392.0
-    x = fanfare([(c, 0, 0.14), (c, 0.15, 0.14), (c * 1.335, 0.3, 0.14), (c * 1.68, 0.45, 0.6)], 1.2)
+    x = shanty_fanfare([(c, 0, 0.13), (c, 0.15, 0.13), (c * 1.335, 0.3, 0.13), (c * 1.68, 0.45, 0.55)], 1.1)
+    add(x, bell(988, 0.6), 0.45, 0.3)
     return finish(x, 0.15)
 
 
 def rewind(rng):
-    """Flûte à coulisse descendante, rapide."""
-    return finish(tone(0, 0.35, 0.01, 2, ((1, 1), (2, 0.15)), (8, 0.01), (900, 260)), 0.05)
+    """Cabestan qui tourne à l'envers : cliquetis de cliquet qui ralentit."""
+    x = buf(0.45)
+    t = 0.0
+    gap = 0.022
+    while t < 0.38:
+        add(x, noise(0.012, rng, 250, 0.9, 0.5), t, 0.8)
+        add(x, tone(1800 - t * 2000, 0.015, 0.001, 200), t, 0.5)
+        t += gap
+        gap *= 1.12
+    return finish(bitcrush(x, 7, 2), 0.04)
 
 
 def chest_fanfare(rng):
-    """Grincement de coffre + pièces + fanfare."""
-    x = buf(3.8)
+    """Coffre qui grince, avalanche de pièces, fanfare à l'accordéon, cloche… et le perroquet."""
+    x = buf(3.9)
     creak = [0.0] * int(SR * 0.6)
     ph = 0.0
     for i in range(len(creak)):
-        f = 160 + 90 * math.sin(TAU * 2.5 * i / SR) + rng.uniform(-30, 30)
+        f = 150 + 100 * math.sin(TAU * 2.5 * i / SR) + rng.uniform(-30, 30)
         ph += TAU * f / SR
         creak[i] = (1 if math.sin(ph) > 0.6 else -0.2) * 0.4 * env(i, len(creak), 0.05, 1.5)
     add(x, creak, 0)
-    add(x, coins(rng, 1), 0.55, 0.6)
-    add(x, coins(rng, 0), 0.75, 0.5)
+    add(x, coins(rng, 1), 0.5, 0.5)
+    add(x, coins(rng, 2), 0.7, 0.5)
     c = 523.25
-    add(x, fanfare([(c, 0, 0.18), (c * 1.26, 0.2, 0.18), (c * 1.5, 0.4, 0.18), (c * 2, 0.6, 0.9),
-                    (c * 1.5, 1.55, 0.15), (c * 2, 1.72, 1.2)], 2.9), 0.9, 0.9)
-    return finish(x, 0.4)
+    add(x, shanty_fanfare([(c, 0, 0.16), (c * 1.26, 0.18, 0.16), (c * 1.5, 0.36, 0.16), (c * 2, 0.54, 0.8),
+                          (c * 1.5, 1.45, 0.14), (c * 2, 1.62, 1.0)], 2.8), 0.9, 0.9)
+    add(x, bell(660, 1.0), 2.5, 0.4)
+    add(x, parrot_laugh(rng), 3.1, 0.4)
+    return finish(x, 0.15)
 
 
 def drumroll(rng):
-    """Roulement de tambour (annonce du classement) qui finit sur un coup."""
-    x = buf(2.2)
+    """Roulement de tambour qui finit sur un coup de cloche et la corne de brume."""
+    x = buf(2.3)
     t = 0.0
     while t < 1.75:
         g = 0.35 + 0.65 * (t / 1.75)
         add(x, noise(0.05, rng, 60, 0.35, 0.15), t, g * rng.uniform(0.8, 1))
         add(x, tone(180, 0.05, 0.001, 50), t, 0.3 * g)
         t += 0.032
-    add(x, noise(0.4, rng, 9, 0.5, 0.05), 1.78, 1.4)
-    add(x, tone(0, 0.4, 0.001, 9, glide=(110, 60)), 1.78, 1.5)
-    return finish(x, 0.15)
+    add(x, bell(523, 0.5), 1.78, 0.5)
+    add(x, tone(0, 0.4, 0.001, 9, glide=(110, 60)), 1.78, 1.2)
+    add(x, foghorn(98, 0.35), 1.82, 0.45)
+    return finish(x, 0.12)
 
 
 def whoosh(rng):
-    """Souffle rapide (cartes du classement qui glissent)."""
+    """Souffle rapide + petite coulisse."""
     n = int(SR * 0.35)
     x = [0.0] * n
     y = 0.0
@@ -278,15 +425,49 @@ def whoosh(rng):
         c = 0.02 + 0.25 * math.sin(math.pi * k)
         y += c * (rng.uniform(-1, 1) - y)
         x[i] = y * math.sin(math.pi * k)
+    add(x, tone(0, 0.3, 0.01, 3, glide=(500, 1300)), 0.02, 0.2)
     return finish(x, 0.05)
+
+
+def kraken_roar(rng):
+    """Rugissement de kraken : grondement grave qui gargouille, bulles énormes."""
+    x = buf(1.5)
+    n = int(SR * 1.2)
+    ph = 0.0
+    growl = [0.0] * n
+    for i in range(n):
+        t = i / SR
+        f = 70 + 25 * math.sin(TAU * 3 * t) + 15 * math.sin(TAU * 11 * t)
+        ph += f / SR
+        frac = ph % 1.0
+        growl[i] = math.tanh(3 * (2 * frac - 1)) * env(i, n, 0.08, 1.6) * (0.8 + 0.2 * math.sin(TAU * 31 * t))
+    add(x, growl, 0, 0.9)
+    add(x, noise(1.0, rng, 2.5, 0.08, 0.02, a=0.1), 0, 0.6)
+    for k in range(6):
+        add(x, bloop(180 + k * 20, 90, 0.16), 0.5 + k * 0.12, 0.5)
+    return finish(bitcrush(x, 7, 2), 0.15)
+
+
+def chomp(rng):
+    """Croc ! Craquement + mâchoire qui claque."""
+    x = buf(0.3)
+    add(x, bitcrush(noise(0.09, rng, 30, 0.9, 0.4), 5, 4), 0, 0.9)
+    add(x, tone(0, 0.08, 0.001, 30, glide=(300, 90)), 0.02, 0.9)
+    add(x, noise(0.03, rng, 90, 0.8, 0.5), 0.11, 0.6)
+    return finish(x, 0.03)
+
+
+def twang(rng):
+    """Cordage qui claque (mât, gréement)."""
+    return finish(rope_twang(0.7, 160), 0.08)
 
 
 def main() -> None:
     rng = random.Random(1726)
     sounds = {
-        "tap-wood-1": (tap_wood(rng, 520), -10),
-        "tap-wood-2": (tap_wood(rng, 600), -10),
-        "tap-wood-3": (tap_wood(rng, 460), -10),
+        "tap-wood-1": (tap_wood(rng, 420), -10),
+        "tap-wood-2": (tap_wood(rng, 520), -10),
+        "tap-wood-3": (tap_wood(rng, 640), -10),
         "bell-bids": (bell_bids(rng), 0),
         "seal-stamp": (seal_stamp(rng), 0),
         "coins-1": (coins(rng, 0), -2),
@@ -304,6 +485,9 @@ def main() -> None:
         "chest-fanfare": (chest_fanfare(rng), 0),
         "drumroll": (drumroll(rng), 0),
         "whoosh": (whoosh(rng), -4),
+        "kraken-roar": (kraken_roar(rng), 0),
+        "chomp": (chomp(rng), -2),
+        "twang": (twang(rng), -2),
     }
     for name, (x, gain) in sounds.items():
         save(name, x, gain)

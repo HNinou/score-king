@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { audio } from '../audio/audio';
+import { voice } from '../audio/voice';
 import { currentRound, type Game } from '../game/model';
 import { currentGame, store, useStore } from '../game/store';
 import { t } from '../i18n/t';
@@ -11,7 +12,7 @@ import { AboutScreen, RulesScreen, SettingsScreen } from './misc';
 import { RecapScreen } from './recap';
 import { RoundScreen } from './round';
 import { SetupScreen } from './setup';
-import { RetroLayer } from './retro';
+import { RetroLayer, StormLayer } from './retro';
 import { LeaderStrip } from './strip';
 
 type View = 'home' | 'setup' | 'game' | 'settings' | 'rules' | 'about';
@@ -57,7 +58,13 @@ export function App() {
   useEffect(() => {
     audio.enabled = prefs.sound;
     audio.setVolume(prefs.volume);
-  }, [prefs.sound, prefs.volume]);
+    voice.enabled = prefs.sound && prefs.speech && prefs.voice === 'witty';
+    voice.volume = prefs.volume;
+    if (!voice.enabled) voice.stop();
+  }, [prefs.sound, prefs.volume, prefs.speech, prefs.voice]);
+
+  // la tension sonore monte au fil de la partie
+  audio.intensity = game ? Math.min(1, game.rounds.length / game.settings.cardsPerRound.length) : 0;
 
   useEffect(() => {
     const root = document.documentElement;
@@ -212,6 +219,7 @@ export function App() {
             <LeaderStrip game={game} />
           </header>
         )}
+        {playing && prefs.retro && <StormLayer game={game} />}
         {main}
       </>
     );

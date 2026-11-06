@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { audio } from '../audio/audio';
-import { FACT_QUIP, FACT_SOUND, headline, newLeader, roundFacts, spotlight, type PlayerFact } from '../game/events';
+import { voice } from '../audio/voice';
+import { FACT_QUIP, FACT_SOUND, factVars, headline, newLeader, roundFacts, roundScenes, spotlight, type PlayerFact } from '../game/events';
 import { gameRanking, gameTotals, isLastRound, playerById, type Game, type Round } from '../game/model';
 import { store, useStore } from '../game/store';
 import { quip, t } from '../i18n/t';
 import { Avatar, Crown, FactFx, Icon, RollingNumber, Seal, Signed } from './common';
 import { RoundEditor } from './round';
+import { Cinema } from './scenes';
 import { FACT_ANIM } from './tokens';
 
 const STAGGER = 380;
@@ -81,29 +83,34 @@ export function RecapScreen({ game, round, onFinish }: { game: Game; round: Roun
   const [show, setShow] = useState(false);
   const [edit, setEdit] = useState(false);
   const finished = game.status === 'finished';
+  const reel = useMemo(() => roundScenes(game, round), [game, round]);
+  const prefs = useStore().state.prefs;
+  const [cinema, setCinema] = useState(
+    () => reel.scenes.length > 0 && !prefs.reducedMotion && !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
 
   const quipText = useMemo(() => {
     if (!witty || !top) return '';
     const key = FACT_QUIP[top.kind];
     const p = playerById(game, top.playerId);
     if (!key || !p) return '';
-    return quip(game.id, key, {
-      nom: p.name,
-      points: Math.abs(top.result.total),
-      plis: top.tricks,
-      bonus: top.bonusCards,
-      nb: top.piratesBySK,
-    });
+    return quip(game.id, key, factVars(game, top));
     // une réplique par bilan affiché
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [round.index, witty]);
 
   useEffect(() => {
+    if (cinema) return;
     audio.play('seal-stamp', { force: true });
-    const timers = [window.setTimeout(() => top && audio.play(FACT_SOUND[top.kind], { force: true }), 700)];
+    const timers = [
+      window.setTimeout(() => top && audio.play(FACT_SOUND[top.kind], { force: true }), 700),
+      window.setTimeout(() => voice.say(quipText), 1300),
+    ];
     return () => timers.forEach((x) => window.clearTimeout(x));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [round.index]);
+  }, [round.index, cinema]);
+
+  if (cinema) return <Cinema game={game} reel={reel} onDone={() => setCinema(false)} />;
 
   return (
     <main className="screen">
@@ -193,6 +200,7 @@ function RankingShow({
     );
     at(1500 + next.length * 220 + 100, () => {
       setStage(2);
+      voice.say([leaderTextRef.current, remarkRef.current, lastTextRef.current].filter(Boolean).join(' … '));
       audio.play(leader ? 'new-captain' : 'coins', { force: true });
     });
     return () => timers.forEach((x) => window.clearTimeout(x));
@@ -214,6 +222,9 @@ function RankingShow({
     return witty && upcoming && !finished && !isLastRound(game, round) ? quip(game.id, 'lastRound', {}) : '';
   });
   const target = remark ? playerById(game, remark.playerId) : undefined;
+  const leaderTextRef = useRef(leaderText);
+  const remarkRef = useRef(remark?.text ?? '');
+  const lastTextRef = useRef(lastText);
 
   const order = stage === 0 ? prev : next;
   const posOf = (id: string) => order.findIndex((x) => x.id === id);

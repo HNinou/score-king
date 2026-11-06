@@ -60,7 +60,15 @@ export async function playRound(
   await setTricks(page, names, tricks);
   for (const [n, b] of Object.entries(bonuses)) await setBonus(page, n, b);
   await page.getByRole('button', { name: 'Valider la manche' }).click();
+  await skipScenes(page);
   await expect(page.getByRole('heading', { name: 'Le bilan' })).toBeVisible();
+}
+
+/** Les scènes animées de fin de manche s'affichent avant le bilan : on les passe. */
+export async function skipScenes(page: Page): Promise<void> {
+  const cinema = page.getByRole('dialog', { name: "Ce qui s'est passé" });
+  await expect(page.getByRole('heading', { name: 'Le bilan' }).or(cinema).first()).toBeVisible();
+  if (await cinema.isVisible()) await cinema.getByRole('button', { name: 'Passer' }).click();
 }
 
 export async function nextRound(page: Page): Promise<void> {

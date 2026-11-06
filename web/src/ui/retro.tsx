@@ -1,6 +1,8 @@
 // Le « cachet » rétro : curseurs pixel, traînée de pièces derrière la souris, étincelles au tap,
 // lanterne qui se balance, navire qui passe, bandeau défilant, badges 88×31 et compteur à l'ancienne.
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { audio } from '../audio/audio';
+import type { Game } from '../game/model';
 import { t } from '../i18n/t';
 import { HOOK, LANTERN, SABRE, SHIP, spriteSvg, spriteUrl } from './pixel';
 
@@ -139,14 +141,44 @@ function Pixel({ svg, className }: { svg: string; className?: string }) {
   return <span className={`pixel ${className ?? ''}`} aria-hidden="true" dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 
+/** Toucher la lanterne éteint la lumière : il ne reste qu'un halo qui suit le doigt ou la souris. */
 export function SwingingLantern() {
+  const [off, setOff] = useState(false);
+  useEffect(() => {
+    const root = document.documentElement;
+    if (!off) {
+      delete root.dataset.lights;
+      return;
+    }
+    root.dataset.lights = 'off';
+    const move = (e: PointerEvent) => {
+      root.style.setProperty('--mx', `${e.clientX}px`);
+      root.style.setProperty('--my', `${e.clientY}px`);
+    };
+    window.addEventListener('pointermove', move, { passive: true });
+    window.addEventListener('pointerdown', move, { passive: true });
+    return () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerdown', move);
+      delete root.dataset.lights;
+    };
+  }, [off]);
   return (
-    <div className="lantern-wrap" aria-hidden="true">
+    <div className="lantern-wrap">
       <div className="lantern-rope" />
-      <div className="lantern">
+      <button
+        type="button"
+        className="lantern"
+        aria-pressed={off}
+        aria-label={t(off ? 'home.lightsOn' : 'home.lightsOff')}
+        onClick={() => {
+          setOff(!off);
+          audio.play('twang', { force: true });
+        }}
+      >
         <Pixel svg={spriteSvg(LANTERN, 4)} />
-        <span className="lantern-glow" />
-      </div>
+        {!off && <span className="lantern-glow" />}
+      </button>
     </div>
   );
 }
@@ -206,4 +238,11 @@ export function Badges() {
       ))}
     </div>
   );
+}
+
+/** La mer se lève au fil de la partie : bruine à mi-parcours, orage et éclairs lointains à la fin. */
+export function StormLayer({ game }: { game: Game }) {
+  const progress = game.rounds.length / game.settings.cardsPerRound.length;
+  const lvl = progress > 0.8 ? 3 : progress > 0.5 ? 2 : 1;
+  return lvl > 1 ? <div className={`storm-layer lvl-${lvl}`} aria-hidden="true" /> : null;
 }

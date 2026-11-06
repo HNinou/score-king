@@ -20,3 +20,7 @@ Format : `AAAA-MM-JJ — Sujet` · Contexte · Décision · Alternative écarté
 - **Effets rétro** (curseur sabre/crochet en pixel art, traînée de pièces, lanterne, bandeau défilant, badges 88×31) : désactivables dans Réglages, coupés en mode animations réduites.
 - **Chiffres jamais en Pirata One** (règle de la DA) : boutons principaux et rangs en police système.
 - **Redo** dans le menu (et Ctrl/Cmd+Maj+Z) pour libérer la barre du haut sur mobile.
+- **Remarques vérifiées contre la manche réelle** (2026-11-06) : pertes affichées avec leur signe, bonus de capture limité à la capture citée, cas Rascal (zéro effleuré = points positifs) traité à part, répliques qui supposaient un contexte inconnu (« le 14 », « souvent ») retirées.
+- **Scènes de fin de manche** (`roundScenes`) : uniquement ce qui a été saisi (Kraken, Baleine, pirates mangés, Roi noyé, Butin réussi, naufrage ≤ −50, zéro tenu à 5 cartes et plus, changement de leader) ; intensité 1 → 3 selon l'avancée de la partie et l'ampleur des écarts. Passables d'un tap, désactivées si animations réduites.
+- **Bruitages 100 % pirates** : accordéon de chant de marin, sifflet de bosco, corne de brume, mouette, perroquet moqueur, cabestan, cordage, rugissement de kraken ; hauteur aléatoire à chaque lecture et tension qui monte avec la partie. `tap-wood` reste l'identifiant du son de saisie même si c'est désormais un « bloop ».
+- **Voix du Bosco** : synthèse vocale française de l'appareil (`localService` uniquement, aucun réseau), voix « Grandpa » en priorité ; coupée en mode Sobre, avec le muet, ou via Réglages.

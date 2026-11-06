@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { audio } from '../audio/audio';
+import { voice } from '../audio/voice';
 import { gameRanking, playerById, type Game } from '../game/model';
 import { gameStats, type Stat } from '../game/stats';
 import { store, useStore } from '../game/store';
@@ -36,10 +37,14 @@ function Reveal({ game, onDone }: { game: Game; onDone: () => void }) {
     setShown(false);
     if (!group) return;
     audio.play('drumroll', { force: true });
+    voice.say(isWinner ? t('end.revealFirst') : t('end.reveal', { r: group[0]?.rank ?? 0 }));
     const id = window.setTimeout(
       () => {
         setShown(true);
         audio.play(isWinner ? 'chest-fanfare' : 'bell-bids', { force: true });
+        const names = group.map((r) => playerById(game, r.id)?.name ?? '').join(' et ');
+        const pts = group[0]?.score ?? 0;
+        window.setTimeout(() => voice.say(`${names} ! ${pts} points.${isWinner && finalQuip ? ` ${finalQuip}` : ''}`), isWinner ? 900 : 300);
       },
       isWinner ? 2200 : 1900,
     );

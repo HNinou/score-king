@@ -24,6 +24,7 @@ export interface Prefs {
   wakeLock: boolean;
   reducedMotion: boolean;
   retro: boolean;
+  speech: boolean;
 }
 
 export interface AppState extends StoredState {
@@ -38,6 +39,7 @@ export const DEFAULT_PREFS: Prefs = {
   wakeLock: true,
   reducedMotion: false,
   retro: true,
+  speech: true,
 };
 
 export type GameAction =
@@ -293,6 +295,7 @@ function readPrefs(x: unknown): Partial<Prefs> {
   if (typeof o.wakeLock === 'boolean') out.wakeLock = o.wakeLock;
   if (typeof o.reducedMotion === 'boolean') out.reducedMotion = o.reducedMotion;
   if (typeof o.retro === 'boolean') out.retro = o.retro;
+  if (typeof o.speech === 'boolean') out.speech = o.speech;
   return out;
 }
 

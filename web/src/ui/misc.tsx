@@ -85,6 +85,10 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
           onChange={(v) => set({ reducedMotion: v === 'reduced' })}
         />
         <label className="switch">
+          <span style={{ fontWeight: 600 }}>{t('settings.speech')}</span>
+          <input type="checkbox" checked={p.speech} onChange={(e) => set({ speech: e.target.checked })} />
+        </label>
+        <label className="switch">
           <span style={{ fontWeight: 600 }}>{t('settings.retro')}</span>
           <input type="checkbox" checked={p.retro} onChange={(e) => set({ retro: e.target.checked })} />
         </label>

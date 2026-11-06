@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { audio } from '../audio/audio';
+import { voice } from '../audio/voice';
 import { EMPTY_BONUS, rawBonus } from '../engine/engine';
 import type { Bonus, Cannon, ErrorCode, LootAlliance } from '../engine/types';
 import {
@@ -111,8 +112,11 @@ function BidsPhase({ game, round, onIncident }: { game: Game; round: Round; onIn
   const [lastQuip] = useState(() => (isLastRound(game, round) && witty ? quip(game.id, 'lastRound', {}) : ''));
 
   useEffect(() => {
-    if (missing === 0 && witty) setQuipText(quip(game.id, quipKey, { total, n }));
-    else setQuipText('');
+    if (missing === 0 && witty) {
+      const q = quip(game.id, quipKey, { total, n });
+      setQuipText(q);
+      voice.say(q);
+    } else setQuipText('');
   }, [missing, quipKey, total, n, witty, game.id]);
 
   const pick = (i: number, v: number) => {

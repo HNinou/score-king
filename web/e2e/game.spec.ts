@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { newGame, nextRound, playRound, row, scoreOf, setBids, setTricks, type BonusInput } from './helpers';
+import { newGame, nextRound, playRound, row, scoreOf, setBids, setTricks, skipScenes, type BonusInput } from './helpers';
 
 interface FixturePlayer {
   id: string;
@@ -79,6 +79,7 @@ test('2. Rascal à 2 joueurs, Escarmouche salée, Boulet/Mitraille (fixture part
       }
     }
     await page.getByRole('button', { name: 'Valider la manche' }).click();
+    await skipScenes(page);
     const expected = g.expectedRunningTotals[k] as Record<string, number>;
     expect(await scoreOf(page, 'Ana')).toBe(expected.A);
     expect(await scoreOf(page, 'Bob')).toBe(expected.B);
@@ -98,6 +99,7 @@ test('3. erreur bloquante puis correction', async ({ page }) => {
   await page.getByRole('group', { name: 'Plis de Anne' }).getByRole('button', { name: '0', exact: true }).click();
   await expect(page.getByRole('status').first()).toContainText('Tous les plis sont attribués');
   await page.getByRole('button', { name: 'Valider la manche' }).click();
+  await skipScenes(page);
   await expect(page.getByRole('heading', { name: 'Le bilan' })).toBeVisible();
 });
 
@@ -245,6 +247,9 @@ test('11. cartes spéciales : Kraken activé en cours de partie', async ({ page 
   await page.getByRole('group', { name: 'Plis détruits ou défaussés' }).getByRole('button', { name: '1', exact: true }).click();
   await expect(page.getByRole('status').first()).toContainText('Tous les plis sont attribués');
   await page.getByRole('button', { name: 'Valider la manche' }).click();
+  const cinema = page.getByRole('dialog', { name: "Ce qui s'est passé" });
+  await expect(cinema.getByText('KRAKEN !')).toBeVisible();
+  await cinema.getByRole('button', { name: 'Passer' }).click();
   expect(await scoreOf(page, 'Anne')).toBe(40);
 });
 
