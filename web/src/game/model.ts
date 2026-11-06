@@ -44,6 +44,8 @@ export interface Settings {
   pirateAbilities: boolean;
   originalEdition: boolean;
   firstDealerIndex: number;
+  /** Règle maison (optionnelle dans le format commun) : bonus comptés même si le pari est raté. */
+  bonusAlwaysCounts?: boolean;
 }
 
 export interface Entry {
@@ -146,6 +148,7 @@ export function rulesOf(s: Settings): Rules {
     scoring: s.scoring,
     skullKingByMermaidBonus: s.originalEdition ? 50 : 40,
     mermaidByPirateBonusEnabled: !s.originalEdition,
+    bonusAlwaysCounts: s.bonusAlwaysCounts === true,
   };
 }
 

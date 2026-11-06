@@ -490,7 +490,10 @@
     "yoho.3": "HO !",
     "settings.express": "Mode express (sans scènes ni annonce entre les manches)",
     "scene.again": "encore ! ×{n}",
-    "round.cardsShort": "{n} cartes"
+    "round.cardsShort": "{n} cartes",
+    "setup.houseRules": "Règles maison",
+    "setup.bonusAlways": "Bonus toujours comptés, même si le pari est raté",
+    "setup.bonusAlwaysShort": "bonus toujours comptés"
   },
   "pirates": {
     "redbeard": "Barbe-Rousse, pour vous servir… et vous dépouiller !",

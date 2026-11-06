@@ -92,7 +92,7 @@ export function roundFacts(g: Game, r: Round): PlayerFact[] {
       result,
       diff,
       tricks,
-      bonusCards: diff === 0 ? rawBonus(e.bonus, rules) : 0,
+      bonusCards: diff === 0 || rules.bonusAlwaysCounts ? rawBonus(e.bonus, rules) : 0,
       piratesBySK: e.bonus.piratesBySkullKing,
       captureBonus:
         kind === 'mermaidCapture'

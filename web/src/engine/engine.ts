@@ -18,6 +18,7 @@ export const DEFAULT_RULES: Rules = {
   scoring: 'skullKing',
   skullKingByMermaidBonus: 40,
   mermaidByPirateBonusEnabled: true,
+  bonusAlwaysCounts: false,
 };
 
 export const EMPTY_BONUS: Bonus = {
@@ -121,6 +122,8 @@ export function scoreRound(rules: Partial<Rules>, round: RoundInput): Record<str
       bidPoints = 0;
       bonusPoints = 0;
     }
+    // règle maison : les cartes capturées rapportent leur bonus complet même sur un pari raté
+    if (r.bonusAlwaysCounts && diff !== 0) bonusPoints = rb;
     const wagerPoints = diff === 0 ? wager : 0 - wager;
     out[p.id] = { bidPoints, bonusPoints, wagerPoints, total: bidPoints + bonusPoints + wagerPoints };
   }

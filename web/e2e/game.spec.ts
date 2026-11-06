@@ -288,3 +288,15 @@ test('14. six joueurs : partie lancée, tout le monde visible en haut', async ({
   expect(await scoreOf(page, 'Fanny')).toBe(20);
   expect(await scoreOf(page, 'Anne')).toBe(10);
 });
+
+test('15. règle maison : bonus comptés même sur un pari raté', async ({ page }) => {
+  const names = ['Anne', 'Bart'];
+  await newGame(page, names, async (p) => {
+    await p.getByText('Options').click();
+    await p.getByLabel('Bonus toujours comptés, même si le pari est raté').check();
+    await p.getByLabel('Planning des manches').selectOption('swiftAndSalty');
+  });
+  // Anne parie 3, fait 2 (−10) mais a capturé le 14 noir (+20) → +10
+  await playRound(page, names, [3, 1], [2, 2], { Anne: { black14: true } });
+  expect(await scoreOf(page, 'Anne')).toBe(10);
+});

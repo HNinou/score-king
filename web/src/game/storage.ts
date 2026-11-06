@@ -36,6 +36,7 @@ function isSettings(x: unknown): x is Settings {
     isBool(e.whiteWhale) &&
     isBool(x.pirateAbilities) &&
     isBool(x.originalEdition) &&
+    (x.bonusAlwaysCounts === undefined || isBool(x.bonusAlwaysCounts)) &&
     isInt(x.firstDealerIndex)
   );
 }

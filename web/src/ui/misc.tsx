@@ -173,6 +173,7 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
           <li>Skull King capturé par une sirène : +40 (+50 en édition d'origine)</li>
           <li>Alliance de Butin réussie : +20 pour chacun des deux alliés</li>
         </ul>
+        <p className="muted">Règle maison possible (option « bonus toujours comptés ») : les cartes capturées rapportent leur bonus même sur un pari raté.</p>
       </section>
       <section className="card pad">
         <h2 className="title" style={{ fontSize: 'var(--fs-xl)' }}>

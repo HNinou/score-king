@@ -101,11 +101,12 @@ export function SetupScreen({ onBack, onStart }: { onBack: () => void; onStart: 
 
   const editingPlayer = players.find((p) => p.id === editing);
   const canStart = players.length >= MIN_PLAYERS && schedule.length > 0;
-  const summary = t('setup.summary', {
-    s: t(`setup.scoring.${settings.scoring}`),
-    p: t(`preset.${settings.preset}`),
-    r: schedule.length,
-  });
+  const summary =
+    t('setup.summary', {
+      s: t(`setup.scoring.${settings.scoring}`),
+      p: t(`preset.${settings.preset}`),
+      r: schedule.length,
+    }) + (settings.bonusAlwaysCounts ? ` · ${t('setup.bonusAlwaysShort')}` : '');
 
   return (
     <main className="screen">
@@ -251,6 +252,12 @@ export function SetupScreen({ onBack, onStart }: { onBack: () => void; onStart: 
           />
           <Toggle label={t('setup.abilities')} checked={settings.pirateAbilities} onChange={(v) => setSettings({ ...settings, pirateAbilities: v })} />
           <Toggle label={t('setup.original')} checked={settings.originalEdition} onChange={(v) => setSettings({ ...settings, originalEdition: v })} />
+          <strong>{t('setup.houseRules')}</strong>
+          <Toggle
+            label={t('setup.bonusAlways')}
+            checked={settings.bonusAlwaysCounts === true}
+            onChange={(v) => setSettings({ ...settings, bonusAlwaysCounts: v })}
+          />
         </div>
       </details>
 

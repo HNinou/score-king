@@ -79,7 +79,7 @@ describe('compléments', () => {
 
   it('bonus brut sans compteur', () => {
     expect(rawBonus(undefined)).toBe(0);
-    expect(rawBonus({ mermaidsByPirate: 1 }, { scoring: 'skullKing', skullKingByMermaidBonus: 50, mermaidByPirateBonusEnabled: false })).toBe(0);
+    expect(rawBonus({ mermaidsByPirate: 1 }, { scoring: 'skullKing', skullKingByMermaidBonus: 50, mermaidByPirateBonusEnabled: false, bonusAlwaysCounts: false })).toBe(0);
   });
 
   it('localise les erreurs par joueur et calcule le delta de plis', () => {
@@ -129,6 +129,17 @@ describe('compléments', () => {
         'LOOT_INVALID',
       ]),
     );
+  });
+
+  it('règle maison : bonus toujours comptés, Butin inchangé', () => {
+    const players = [
+      { id: 'A', bid: 2, tricks: 1, bonus: { standard14: 1, piratesBySkullKing: 1 } },
+      { id: 'B', bid: 1, tricks: 2 },
+    ];
+    const round = { cardsDealt: 3, players, lootAlliances: [{ playedBy: 'A', capturedBy: 'B' }] };
+    expect(scoreRound({ bonusAlwaysCounts: true }, round).A).toEqual({ bidPoints: -10, bonusPoints: 40, wagerPoints: 0, total: 30 });
+    expect(scoreRound({ bonusAlwaysCounts: true, scoring: 'rascal' }, round).A?.bonusPoints).toBe(40);
+    expect(scoreRound({}, round).A?.bonusPoints).toBe(0);
   });
 
   it('Butin réussi en Skull King', () => {

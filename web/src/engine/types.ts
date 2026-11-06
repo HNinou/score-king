@@ -30,6 +30,8 @@ export interface Rules {
   scoring: Scoring;
   skullKingByMermaidBonus: number;
   mermaidByPirateBonusEnabled: boolean;
+  /** Règle maison : les bonus de cartes comptent même si le pari est raté (le Butin garde sa règle). */
+  bonusAlwaysCounts: boolean;
 }
 
 /** Saisie d'un joueur pour une manche (forme compacte des fixtures, champs optionnels = défaut). */
