@@ -1,3 +1,5 @@
+import { music } from './music';
+
 // Service audio unique : préchargement, priorités, variantes sans répétition, muet, volume.
 export type SoundId =
   | 'tap-wood'
@@ -100,6 +102,7 @@ class AudioService {
     if (pr > 0) {
       const d = Number.isFinite(base.duration) ? base.duration : 1;
       this.busyUntil = now + (d * 1000) / el.playbackRate;
+      if (pr >= 3) music.duck((d * 1000) / el.playbackRate + 400);
       this.busyPriority = pr;
     }
   }

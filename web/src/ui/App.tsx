@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { audio } from '../audio/audio';
+import { music } from '../audio/music';
 import { voice } from '../audio/voice';
 import { currentRound, type Game } from '../game/model';
 import { currentGame, store, useStore } from '../game/store';
@@ -61,10 +62,20 @@ export function App() {
     voice.enabled = prefs.sound && prefs.speech && prefs.voice === 'witty';
     voice.volume = prefs.volume;
     if (!voice.enabled) voice.stop();
-  }, [prefs.sound, prefs.volume, prefs.speech, prefs.voice]);
+    music.enabled = prefs.sound && prefs.music;
+    music.volume = prefs.musicVolume;
+    music.apply();
+  }, [prefs.sound, prefs.volume, prefs.speech, prefs.voice, prefs.music, prefs.musicVolume]);
+
+  useEffect(() => {
+    voice.onSpeak = (speaking) => (speaking ? music.duck(Infinity) : music.unduck());
+    music.setActive(true);
+  }, []);
 
   // la tension sonore monte au fil de la partie
-  audio.intensity = game ? Math.min(1, game.rounds.length / game.settings.cardsPerRound.length) : 0;
+  const progress = game && view === 'game' ? Math.min(1, game.rounds.length / game.settings.cardsPerRound.length) : 0;
+  audio.intensity = progress;
+  useEffect(() => music.setMood(progress), [progress]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -75,7 +86,10 @@ export function App() {
   }, [prefs.theme, prefs.reducedMotion]);
 
   useEffect(() => {
-    const unlock = () => audio.unlock();
+    const unlock = () => {
+      audio.unlock();
+      music.unlock();
+    };
     window.addEventListener('pointerdown', unlock, { once: true });
     window.addEventListener('keydown', unlock, { once: true });
     return () => {

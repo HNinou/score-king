@@ -477,6 +477,8 @@
     "scene.crownSub": "{nom} prend la couronne",
     "settings.speech": "Voix du Bosco (lecture à voix haute)",
     "home.lightsOff": "Éteindre la lanterne",
-    "home.lightsOn": "Rallumer la lanterne"
+    "home.lightsOn": "Rallumer la lanterne",
+    "settings.music": "Musique d'ambiance",
+    "settings.musicVolume": "Volume de la musique"
   }
 }

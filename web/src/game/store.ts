@@ -25,6 +25,8 @@ export interface Prefs {
   reducedMotion: boolean;
   retro: boolean;
   speech: boolean;
+  music: boolean;
+  musicVolume: number;
 }
 
 export interface AppState extends StoredState {
@@ -40,6 +42,8 @@ export const DEFAULT_PREFS: Prefs = {
   reducedMotion: false,
   retro: true,
   speech: true,
+  music: true,
+  musicVolume: 0.5,
 };
 
 export type GameAction =
@@ -296,6 +300,8 @@ function readPrefs(x: unknown): Partial<Prefs> {
   if (typeof o.reducedMotion === 'boolean') out.reducedMotion = o.reducedMotion;
   if (typeof o.retro === 'boolean') out.retro = o.retro;
   if (typeof o.speech === 'boolean') out.speech = o.speech;
+  if (typeof o.music === 'boolean') out.music = o.music;
+  if (typeof o.musicVolume === 'number' && o.musicVolume >= 0 && o.musicVolume <= 1) out.musicVolume = o.musicVolume;
   return out;
 }
 

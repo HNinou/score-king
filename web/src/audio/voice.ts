@@ -5,7 +5,7 @@ function frenchVoice(): SpeechSynthesisVoice | null {
   if (typeof speechSynthesis === 'undefined') return null;
   const voices = speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith('fr') && v.localService);
   // « Grandpa » (macOS/iOS) fait un vieux bosco parfait ; sinon une voix grave française
-  const pref = ['Grandpa', 'Jacques', 'Rocko', 'Thomas', 'Daniel', 'Nicolas', 'Amélie'];
+  const pref = ['Grandpa', 'Rocko', 'Jacques', 'Thomas', 'Daniel', 'Nicolas', 'Amélie'];
   for (const name of pref) {
     const v = voices.find((x) => x.lang === 'fr-FR' && x.name.includes(name));
     if (v) return v;
@@ -27,9 +27,24 @@ export function speakable(text: string): string {
     .trim();
 }
 
+const OPENERS = ['Arrr !', 'Morbleu !', 'Sacrebleu !', 'Par les dents du kraken !', 'Ohé, moussaillons !', 'Ho ho !', 'Par ma jambe de bois…', 'Mille milliards de mouettes !'];
+const CLOSERS = ['Arrr.', 'Yo-ho !', 'Hé hé hé…', 'Foi de pirate.', 'Arrrgh.'];
+const pick = (a: string[]): string => a[Math.floor(Math.random() * a.length)] ?? '';
+
+/** Habille la réplique en vieux loup de mer : juron d'ouverture, ponctuation traînante, ricanement final. */
+export function piratize(text: string, shout = false, rnd: () => number = Math.random): string {
+  if (shout) return `Arrrgh ! ${text}`;
+  let out = text.replace(/\. /g, '… ');
+  if (rnd() < 0.55) out = `${pick(OPENERS)} ${out}`;
+  if (rnd() < 0.4) out = `${out} ${pick(CLOSERS)}`;
+  return out;
+}
+
 class VoiceService {
   enabled = true;
   volume = 0.8;
+  /** Prévenu quand le Bosco commence / finit de parler (pour baisser la musique). */
+  onSpeak: ((speaking: boolean) => void) | null = null;
   private voice: SpeechSynthesisVoice | null = null;
 
   available(): boolean {
@@ -50,12 +65,15 @@ class VoiceService {
     if (!this.enabled || !text || !this.available() || !this.voice) return;
     try {
       if (opts.interrupt !== false) speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(speakable(text));
+      const u = new SpeechSynthesisUtterance(speakable(piratize(text, opts.shout)));
       u.voice = this.voice;
       u.lang = this.voice.lang;
       u.volume = this.volume;
-      u.pitch = opts.shout ? 1.25 : 0.7;
-      u.rate = opts.shout ? 1.15 : 1.02;
+      // voix grave et traînante de vieux bosco ; les cris de scène, rauques et rapides
+      u.pitch = opts.shout ? 0.9 : 0.55;
+      u.rate = opts.shout ? 1.1 : 0.92;
+      u.onstart = () => this.onSpeak?.(true);
+      u.onend = () => this.onSpeak?.(false);
       speechSynthesis.speak(u);
     } catch {
       // synthèse vocale indisponible

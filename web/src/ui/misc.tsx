@@ -85,6 +85,14 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
           onChange={(v) => set({ reducedMotion: v === 'reduced' })}
         />
         <label className="switch">
+          <span style={{ fontWeight: 600 }}>{t('settings.music')}</span>
+          <input type="checkbox" checked={p.music} onChange={(e) => set({ music: e.target.checked })} />
+        </label>
+        <label className="field">
+          <span>{t('settings.musicVolume')}</span>
+          <input type="range" min={0} max={1} step={0.05} value={p.musicVolume} onChange={(e) => set({ musicVolume: Number(e.target.value) })} />
+        </label>
+        <label className="switch">
           <span style={{ fontWeight: 600 }}>{t('settings.speech')}</span>
           <input type="checkbox" checked={p.speech} onChange={(e) => set({ speech: e.target.checked })} />
         </label>
