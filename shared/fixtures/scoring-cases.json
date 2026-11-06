@@ -1,0 +1,309 @@
+{
+  "version": 1,
+  "source": "Règles officielles Skull King 2021 (Grandpa Beck's Games). Spécification : docs/01-REGLES-SCORE.md",
+  "notes": [
+    "roundCases : calcul du score d'une manche. Les sommes de plis n'y sont pas forcément cohérentes (la validation est testée à part).",
+    "Champs omis = valeurs par défaut : bonus vide, harryAdjustment 0, rascalWager 0, cannon 'grapeshot', lootAlliances [], rules = skullKing / 40 / mermaidByPirate activé.",
+    "bid = pari annoncé ; pari effectif = bid + harryAdjustment.",
+    "Ces fixtures sont la VÉRITÉ. Ne jamais modifier une valeur attendue pour faire passer un test : corriger le moteur. Seul un humain peut changer ce fichier."
+  ],
+  "roundCases": [
+    { "id": "sk-01-pari1-reussi", "cardsDealt": 1,
+      "players": [{ "id": "A", "bid": 1, "tricks": 1 }],
+      "expected": { "A": { "bidPoints": 20, "bonusPoints": 0, "wagerPoints": 0, "total": 20 } } },
+
+    { "id": "sk-02-pari3-reussi-avec-14", "cardsDealt": 5,
+      "players": [{ "id": "A", "bid": 3, "tricks": 3, "bonus": { "standard14": 1, "black14": true } }],
+      "expected": { "A": { "bidPoints": 60, "bonusPoints": 30, "wagerPoints": 0, "total": 90 } } },
+
+    { "id": "sk-03-pari3-deux-plis-de-moins", "cardsDealt": 5,
+      "players": [{ "id": "A", "bid": 3, "tricks": 1 }],
+      "expected": { "A": { "bidPoints": -20, "bonusPoints": 0, "wagerPoints": 0, "total": -20 } } },
+
+    { "id": "sk-04-pari2-deux-plis-de-trop", "cardsDealt": 5,
+      "players": [{ "id": "A", "bid": 2, "tricks": 4 }],
+      "expected": { "A": { "bidPoints": -20, "bonusPoints": 0, "wagerPoints": 0, "total": -20 } } },
+
+    { "id": "sk-05-pari0-reussi-manche7", "cardsDealt": 7,
+      "players": [{ "id": "A", "bid": 0, "tricks": 0 }],
+      "expected": { "A": { "bidPoints": 70, "bonusPoints": 0, "wagerPoints": 0, "total": 70 } } },
+
+    { "id": "sk-06-pari0-rate-manche7", "cardsDealt": 7,
+      "players": [{ "id": "A", "bid": 0, "tricks": 2 }],
+      "expected": { "A": { "bidPoints": -70, "bonusPoints": 0, "wagerPoints": 0, "total": -70 } } },
+
+    { "id": "sk-07-bonus-perdu-si-pari-rate", "cardsDealt": 4,
+      "players": [{ "id": "A", "bid": 2, "tricks": 3, "bonus": { "standard14": 1 } }],
+      "expected": { "A": { "bidPoints": -10, "bonusPoints": 0, "wagerPoints": 0, "total": -10 } } },
+
+    { "id": "sk-08-skull-king-capture-2-pirates", "cardsDealt": 10,
+      "players": [{ "id": "A", "bid": 4, "tricks": 4, "bonus": { "piratesBySkullKing": 2 } }],
+      "expected": { "A": { "bidPoints": 80, "bonusPoints": 60, "wagerPoints": 0, "total": 140 } } },
+
+    { "id": "sk-09-sirene-capture-skull-king", "cardsDealt": 6,
+      "players": [{ "id": "A", "bid": 1, "tricks": 1, "bonus": { "skullKingByMermaid": true } }],
+      "expected": { "A": { "bidPoints": 20, "bonusPoints": 40, "wagerPoints": 0, "total": 60 } } },
+
+    { "id": "sk-10-edition-origine-50-sans-bonus-sirene", "cardsDealt": 6,
+      "rules": { "skullKingByMermaidBonus": 50, "mermaidByPirateBonusEnabled": false },
+      "players": [
+        { "id": "A", "bid": 1, "tricks": 1, "bonus": { "skullKingByMermaid": true } },
+        { "id": "B", "bid": 2, "tricks": 2, "bonus": { "mermaidsByPirate": 1 } }
+      ],
+      "expected": {
+        "A": { "bidPoints": 20, "bonusPoints": 50, "wagerPoints": 0, "total": 70 },
+        "B": { "bidPoints": 40, "bonusPoints": 0, "wagerPoints": 0, "total": 40 } } },
+
+    { "id": "sk-11-pirate-capture-sirene", "cardsDealt": 3,
+      "players": [{ "id": "A", "bid": 2, "tricks": 2, "bonus": { "mermaidsByPirate": 1 } }],
+      "expected": { "A": { "bidPoints": 40, "bonusPoints": 20, "wagerPoints": 0, "total": 60 } } },
+
+    { "id": "sk-12-butin-les-deux-reussissent", "cardsDealt": 5,
+      "players": [{ "id": "A", "bid": 0, "tricks": 0 }, { "id": "B", "bid": 2, "tricks": 2 }],
+      "lootAlliances": [{ "playedBy": "A", "capturedBy": "B" }],
+      "expected": {
+        "A": { "bidPoints": 50, "bonusPoints": 20, "wagerPoints": 0, "total": 70 },
+        "B": { "bidPoints": 40, "bonusPoints": 20, "wagerPoints": 0, "total": 60 } } },
+
+    { "id": "sk-13-butin-partenaire-rate", "cardsDealt": 5,
+      "players": [{ "id": "A", "bid": 0, "tricks": 0 }, { "id": "B", "bid": 2, "tricks": 3 }],
+      "lootAlliances": [{ "playedBy": "A", "capturedBy": "B" }],
+      "expected": {
+        "A": { "bidPoints": 50, "bonusPoints": 0, "wagerPoints": 0, "total": 50 },
+        "B": { "bidPoints": -10, "bonusPoints": 0, "wagerPoints": 0, "total": -10 } } },
+
+    { "id": "sk-14-deux-alliances-meme-capteur", "cardsDealt": 8,
+      "players": [{ "id": "A", "bid": 1, "tricks": 1 }, { "id": "B", "bid": 3, "tricks": 3 }, { "id": "C", "bid": 2, "tricks": 2 }],
+      "lootAlliances": [{ "playedBy": "A", "capturedBy": "B" }, { "playedBy": "C", "capturedBy": "B" }],
+      "expected": {
+        "A": { "bidPoints": 20, "bonusPoints": 20, "wagerPoints": 0, "total": 40 },
+        "B": { "bidPoints": 60, "bonusPoints": 40, "wagerPoints": 0, "total": 100 },
+        "C": { "bidPoints": 40, "bonusPoints": 20, "wagerPoints": 0, "total": 60 } } },
+
+    { "id": "sk-15-pari-rascal-of-roatan-gagne", "cardsDealt": 3,
+      "players": [{ "id": "A", "bid": 2, "tricks": 2, "rascalWager": 20 }],
+      "expected": { "A": { "bidPoints": 40, "bonusPoints": 0, "wagerPoints": 20, "total": 60 } } },
+
+    { "id": "sk-16-pari-rascal-of-roatan-perdu", "cardsDealt": 3,
+      "players": [{ "id": "A", "bid": 2, "tricks": 1, "rascalWager": 20 }],
+      "expected": { "A": { "bidPoints": -10, "bonusPoints": 0, "wagerPoints": -20, "total": -30 } } },
+
+    { "id": "sk-17-harry-plus-un", "cardsDealt": 5,
+      "players": [{ "id": "A", "bid": 2, "harryAdjustment": 1, "tricks": 3 }],
+      "expected": { "A": { "bidPoints": 60, "bonusPoints": 0, "wagerPoints": 0, "total": 60 } } },
+
+    { "id": "sk-18-harry-moins-un-devient-pari-zero", "cardsDealt": 4,
+      "players": [{ "id": "A", "bid": 1, "harryAdjustment": -1, "tricks": 0 }],
+      "expected": { "A": { "bidPoints": 40, "bonusPoints": 0, "wagerPoints": 0, "total": 40 } } },
+
+    { "id": "sk-19-pari0-utilise-cartes-distribuees-pas-numero-manche", "cardsDealt": 6,
+      "players": [{ "id": "A", "bid": 0, "tricks": 0 }],
+      "expected": { "A": { "bidPoints": 60, "bonusPoints": 0, "wagerPoints": 0, "total": 60 } } },
+
+    { "id": "sk-20-pari-max-tous-les-14", "cardsDealt": 10,
+      "players": [{ "id": "A", "bid": 10, "tricks": 10, "bonus": { "standard14": 3, "black14": true } }],
+      "expected": { "A": { "bidPoints": 200, "bonusPoints": 50, "wagerPoints": 0, "total": 250 } } },
+
+    { "id": "rascal-01-coup-direct", "cardsDealt": 5, "rules": { "scoring": "rascal" },
+      "players": [{ "id": "A", "bid": 2, "tricks": 2, "bonus": { "standard14": 1, "black14": true } }],
+      "expected": { "A": { "bidPoints": 50, "bonusPoints": 30, "wagerPoints": 0, "total": 80 } } },
+
+    { "id": "rascal-02-coup-effleure", "cardsDealt": 5, "rules": { "scoring": "rascal" },
+      "players": [{ "id": "A", "bid": 2, "tricks": 3, "bonus": { "standard14": 1, "black14": true } }],
+      "expected": { "A": { "bidPoints": 25, "bonusPoints": 15, "wagerPoints": 0, "total": 40 } } },
+
+    { "id": "rascal-03-rate-completement", "cardsDealt": 5, "rules": { "scoring": "rascal" },
+      "players": [{ "id": "A", "bid": 2, "tricks": 4, "bonus": { "standard14": 1, "black14": true } }],
+      "expected": { "A": { "bidPoints": 0, "bonusPoints": 0, "wagerPoints": 0, "total": 0 } } },
+
+    { "id": "rascal-04-effleure-cartes-impaires", "cardsDealt": 3, "rules": { "scoring": "rascal" },
+      "players": [{ "id": "A", "bid": 1, "tricks": 2, "bonus": { "standard14": 1 } }],
+      "expected": { "A": { "bidPoints": 15, "bonusPoints": 5, "wagerPoints": 0, "total": 20 } } },
+
+    { "id": "rascal-05-pari0-direct", "cardsDealt": 4, "rules": { "scoring": "rascal" },
+      "players": [{ "id": "A", "bid": 0, "tricks": 0 }],
+      "expected": { "A": { "bidPoints": 40, "bonusPoints": 0, "wagerPoints": 0, "total": 40 } } },
+
+    { "id": "rascal-06-pari0-effleure", "cardsDealt": 4, "rules": { "scoring": "rascal" },
+      "players": [{ "id": "A", "bid": 0, "tricks": 1 }],
+      "expected": { "A": { "bidPoints": 20, "bonusPoints": 0, "wagerPoints": 0, "total": 20 } } },
+
+    { "id": "rascal-07-boulet-reussi", "cardsDealt": 6, "rules": { "scoring": "rascal" },
+      "players": [{ "id": "A", "bid": 3, "tricks": 3, "cannon": "cannonball", "bonus": { "black14": true } }],
+      "expected": { "A": { "bidPoints": 90, "bonusPoints": 20, "wagerPoints": 0, "total": 110 } } },
+
+    { "id": "rascal-08-boulet-rate-de-un", "cardsDealt": 6, "rules": { "scoring": "rascal" },
+      "players": [{ "id": "A", "bid": 3, "tricks": 2, "cannon": "cannonball", "bonus": { "black14": true } }],
+      "expected": { "A": { "bidPoints": 0, "bonusPoints": 0, "wagerPoints": 0, "total": 0 } } },
+
+    { "id": "rascal-09-butin-pas-accorde-sur-coup-effleure", "cardsDealt": 5, "rules": { "scoring": "rascal" },
+      "players": [{ "id": "A", "bid": 1, "tricks": 1 }, { "id": "B", "bid": 2, "tricks": 3 }],
+      "lootAlliances": [{ "playedBy": "B", "capturedBy": "A" }],
+      "expected": {
+        "A": { "bidPoints": 50, "bonusPoints": 0, "wagerPoints": 0, "total": 50 },
+        "B": { "bidPoints": 25, "bonusPoints": 0, "wagerPoints": 0, "total": 25 } } },
+
+    { "id": "rascal-10-butin-deux-coups-directs", "cardsDealt": 5, "rules": { "scoring": "rascal" },
+      "players": [{ "id": "A", "bid": 1, "tricks": 1 }, { "id": "B", "bid": 0, "tricks": 0 }],
+      "lootAlliances": [{ "playedBy": "B", "capturedBy": "A" }],
+      "expected": {
+        "A": { "bidPoints": 50, "bonusPoints": 20, "wagerPoints": 0, "total": 70 },
+        "B": { "bidPoints": 50, "bonusPoints": 20, "wagerPoints": 0, "total": 70 } } },
+
+    { "id": "rascal-11-sirene-skull-king-moitie-bonus", "cardsDealt": 7, "rules": { "scoring": "rascal" },
+      "players": [{ "id": "A", "bid": 2, "tricks": 1, "bonus": { "skullKingByMermaid": true } }],
+      "expected": { "A": { "bidPoints": 35, "bonusPoints": 20, "wagerPoints": 0, "total": 55 } } },
+
+    { "id": "rascal-12-pari-roatan-sur-coup-effleure", "cardsDealt": 4, "rules": { "scoring": "rascal" },
+      "players": [{ "id": "A", "bid": 2, "tricks": 3, "rascalWager": 10 }],
+      "expected": { "A": { "bidPoints": 20, "bonusPoints": 0, "wagerPoints": -10, "total": 10 } } },
+
+    { "id": "rascal-13-boulet-pari0", "cardsDealt": 8, "rules": { "scoring": "rascal" },
+      "players": [{ "id": "A", "bid": 0, "tricks": 0, "cannon": "cannonball" }],
+      "expected": { "A": { "bidPoints": 120, "bonusPoints": 0, "wagerPoints": 0, "total": 120 } } }
+  ],
+
+  "gameCases": [
+    {
+      "id": "partie-01-classique-3-joueurs-10-manches",
+      "playerIds": ["A", "B", "C"],
+      "rounds": [
+        { "cardsDealt": 1, "players": [ { "id": "A", "bid": 0, "tricks": 0 }, { "id": "B", "bid": 1, "tricks": 1 }, { "id": "C", "bid": 0, "tricks": 0 } ] },
+        { "cardsDealt": 2, "players": [ { "id": "A", "bid": 1, "tricks": 1 }, { "id": "B", "bid": 1, "tricks": 0 }, { "id": "C", "bid": 0, "tricks": 1 } ] },
+        { "cardsDealt": 3, "players": [ { "id": "A", "bid": 1, "tricks": 2 }, { "id": "B", "bid": 2, "tricks": 1 }, { "id": "C", "bid": 0, "tricks": 0 } ] },
+        { "cardsDealt": 4, "players": [ { "id": "A", "bid": 2, "tricks": 2, "bonus": { "standard14": 1 } }, { "id": "B", "bid": 1, "tricks": 1 }, { "id": "C", "bid": 1, "tricks": 1 } ] },
+        { "cardsDealt": 5, "players": [ { "id": "A", "bid": 0, "tricks": 0 }, { "id": "B", "bid": 3, "tricks": 3, "bonus": { "piratesBySkullKing": 1 } }, { "id": "C", "bid": 2, "tricks": 2 } ] },
+        { "cardsDealt": 6, "players": [ { "id": "A", "bid": 2, "tricks": 3 }, { "id": "B", "bid": 2, "tricks": 2, "bonus": { "skullKingByMermaid": true } }, { "id": "C", "bid": 1, "tricks": 1 } ] },
+        { "cardsDealt": 7, "players": [ { "id": "A", "bid": 3, "tricks": 3, "bonus": { "black14": true } }, { "id": "B", "bid": 2, "tricks": 3 }, { "id": "C", "bid": 1, "tricks": 1, "bonus": { "mermaidsByPirate": 1 } } ] },
+        { "cardsDealt": 8, "players": [ { "id": "A", "bid": 4, "tricks": 4 }, { "id": "B", "bid": 0, "tricks": 0 }, { "id": "C", "bid": 3, "tricks": 4 } ] },
+        { "cardsDealt": 9, "players": [ { "id": "A", "bid": 3, "tricks": 3, "bonus": { "standard14": 2 } }, { "id": "B", "bid": 4, "tricks": 3 }, { "id": "C", "bid": 2, "tricks": 3 } ] },
+        { "cardsDealt": 10, "players": [ { "id": "A", "bid": 5, "tricks": 5 }, { "id": "B", "bid": 3, "tricks": 3, "bonus": { "piratesBySkullKing": 2, "black14": true } }, { "id": "C", "bid": 1, "tricks": 2 } ] }
+      ],
+      "expectedRunningTotals": [
+        { "A": 10, "B": 20, "C": 10 },
+        { "A": 30, "B": 10, "C": -10 },
+        { "A": 20, "B": 0, "C": 20 },
+        { "A": 70, "B": 20, "C": 40 },
+        { "A": 120, "B": 110, "C": 80 },
+        { "A": 110, "B": 190, "C": 100 },
+        { "A": 190, "B": 180, "C": 140 },
+        { "A": 270, "B": 260, "C": 130 },
+        { "A": 350, "B": 250, "C": 120 },
+        { "A": 450, "B": 390, "C": 110 }
+      ],
+      "expectedTotals": { "A": 450, "B": 390, "C": 110 }
+    },
+    {
+      "id": "partie-02-rascal-2-joueurs-escarmouche",
+      "rules": { "scoring": "rascal" },
+      "playerIds": ["A", "B"],
+      "rounds": [
+        { "cardsDealt": 5, "players": [ { "id": "A", "bid": 2, "tricks": 2 }, { "id": "B", "bid": 1, "tricks": 2 } ] },
+        { "cardsDealt": 5, "players": [ { "id": "A", "bid": 1, "tricks": 0 }, { "id": "B", "bid": 3, "tricks": 3, "cannon": "cannonball" } ] },
+        { "cardsDealt": 5, "players": [ { "id": "A", "bid": 0, "tricks": 0, "cannon": "cannonball" }, { "id": "B", "bid": 2, "tricks": 4 } ] },
+        { "cardsDealt": 5, "players": [ { "id": "A", "bid": 2, "tricks": 3, "bonus": { "standard14": 1 } }, { "id": "B", "bid": 1, "tricks": 1, "bonus": { "black14": true } } ] },
+        { "cardsDealt": 5, "players": [ { "id": "A", "bid": 3, "tricks": 3 }, { "id": "B", "bid": 1, "tricks": 0, "cannon": "cannonball" } ] }
+      ],
+      "expectedRunningTotals": [
+        { "A": 50, "B": 25 },
+        { "A": 75, "B": 100 },
+        { "A": 150, "B": 100 },
+        { "A": 180, "B": 170 },
+        { "A": 230, "B": 170 }
+      ],
+      "expectedTotals": { "A": 230, "B": 170 }
+    }
+  ],
+
+  "validationCases": [
+    { "id": "val-01-manche-valide", "setup": {},
+      "round": { "cardsDealt": 3, "players": [ { "id": "A", "bid": 1, "tricks": 1 }, { "id": "B", "bid": 0, "tricks": 0 }, { "id": "C", "bid": 2, "tricks": 1 }, { "id": "D", "bid": 1, "tricks": 1 } ] },
+      "expectedErrors": [] },
+
+    { "id": "val-02-somme-plis-incorrecte", "setup": {},
+      "round": { "cardsDealt": 3, "players": [ { "id": "A", "bid": 1, "tricks": 1 }, { "id": "B", "bid": 1, "tricks": 1 }, { "id": "C", "bid": 0, "tricks": 0 } ] },
+      "expectedErrors": ["TRICKS_SUM_MISMATCH"] },
+
+    { "id": "val-03-kraken-pli-detruit-valide", "setup": { "expansions": { "kraken": true } },
+      "round": { "cardsDealt": 3, "destroyedTricks": 1, "players": [ { "id": "A", "bid": 1, "tricks": 1 }, { "id": "B", "bid": 1, "tricks": 1 }, { "id": "C", "bid": 0, "tricks": 0 } ] },
+      "expectedErrors": [] },
+
+    { "id": "val-04-pli-detruit-sans-leviathan", "setup": {},
+      "round": { "cardsDealt": 3, "destroyedTricks": 1, "players": [ { "id": "A", "bid": 1, "tricks": 1 }, { "id": "B", "bid": 1, "tricks": 1 }, { "id": "C", "bid": 0, "tricks": 0 } ] },
+      "expectedErrors": ["DESTROYED_TRICKS_INVALID"] },
+
+    { "id": "val-05-deux-joueurs-fantome-prend-un-pli", "setup": {},
+      "round": { "cardsDealt": 5, "players": [ { "id": "A", "bid": 2, "tricks": 2 }, { "id": "B", "bid": 2, "tricks": 2 } ] },
+      "expectedErrors": [] },
+
+    { "id": "val-06-deux-joueurs-trop-de-plis", "setup": {},
+      "round": { "cardsDealt": 5, "players": [ { "id": "A", "bid": 3, "tricks": 3 }, { "id": "B", "bid": 3, "tricks": 3 } ] },
+      "expectedErrors": ["TRICKS_SUM_MISMATCH"] },
+
+    { "id": "val-07-pari-superieur-aux-cartes", "setup": {},
+      "round": { "cardsDealt": 3, "players": [ { "id": "A", "bid": 4, "tricks": 1 }, { "id": "B", "bid": 0, "tricks": 1 }, { "id": "C", "bid": 0, "tricks": 1 } ] },
+      "expectedErrors": ["BID_OUT_OF_RANGE"] },
+
+    { "id": "val-08-bonus-sans-pli", "setup": {},
+      "round": { "cardsDealt": 2, "players": [ { "id": "A", "bid": 0, "tricks": 0, "bonus": { "standard14": 1 } }, { "id": "B", "bid": 1, "tricks": 1 }, { "id": "C", "bid": 1, "tricks": 1 } ] },
+      "expectedErrors": ["BONUS_WITHOUT_TRICK"] },
+
+    { "id": "val-09-deux-14-noirs", "setup": {},
+      "round": { "cardsDealt": 4, "players": [ { "id": "A", "bid": 2, "tricks": 2, "bonus": { "black14": true } }, { "id": "B", "bid": 2, "tricks": 2, "bonus": { "black14": true } }, { "id": "C", "bid": 0, "tricks": 0 } ] },
+      "expectedErrors": ["BLACK14_TOTAL_EXCEEDED"] },
+
+    { "id": "val-10-skull-king-capture-et-capturant", "setup": {},
+      "round": { "cardsDealt": 4, "players": [ { "id": "A", "bid": 2, "tricks": 2, "bonus": { "skullKingByMermaid": true } }, { "id": "B", "bid": 2, "tricks": 2, "bonus": { "piratesBySkullKing": 1 } }, { "id": "C", "bid": 0, "tricks": 0 } ] },
+      "expectedErrors": ["SKULL_KING_CAPTURE_CONFLICT"] },
+
+    { "id": "val-11-butin-alliance-avec-soi-meme", "setup": { "expansions": { "loot": true } },
+      "round": { "cardsDealt": 2, "lootAlliances": [ { "playedBy": "A", "capturedBy": "A" } ], "players": [ { "id": "A", "bid": 1, "tricks": 1 }, { "id": "B", "bid": 1, "tricks": 1 }, { "id": "C", "bid": 0, "tricks": 0 } ] },
+      "expectedErrors": ["LOOT_INVALID"] },
+
+    { "id": "val-12-harry-sous-zero", "setup": {},
+      "round": { "cardsDealt": 2, "players": [ { "id": "A", "bid": 0, "harryAdjustment": -1, "tricks": 0 }, { "id": "B", "bid": 1, "tricks": 1 }, { "id": "C", "bid": 1, "tricks": 1 } ] },
+      "expectedErrors": ["HARRY_INVALID"] },
+
+    { "id": "val-13-pari-roatan-invalide", "setup": {},
+      "round": { "cardsDealt": 2, "players": [ { "id": "A", "bid": 1, "tricks": 1, "rascalWager": 15 }, { "id": "B", "bid": 1, "tricks": 1 }, { "id": "C", "bid": 0, "tricks": 0 } ] },
+      "expectedErrors": ["WAGER_INVALID"] },
+
+    { "id": "val-14-trois-sirenes", "setup": {},
+      "round": { "cardsDealt": 4, "players": [ { "id": "A", "bid": 2, "tricks": 2, "bonus": { "mermaidsByPirate": 2 } }, { "id": "B", "bid": 2, "tricks": 2, "bonus": { "mermaidsByPirate": 1 } }, { "id": "C", "bid": 0, "tricks": 0 } ] },
+      "expectedErrors": ["MERMAIDS_BY_PIRATE_EXCEEDED"] },
+
+    { "id": "val-15-quatre-14-de-couleur", "setup": {},
+      "round": { "cardsDealt": 4, "players": [ { "id": "A", "bid": 2, "tricks": 2, "bonus": { "standard14": 2 } }, { "id": "B", "bid": 2, "tricks": 2, "bonus": { "standard14": 2 } }, { "id": "C", "bid": 0, "tricks": 0 } ] },
+      "expectedErrors": ["STANDARD14_TOTAL_EXCEEDED"] },
+
+    { "id": "val-16-butin-capture-sans-pli", "setup": { "expansions": { "loot": true } },
+      "round": { "cardsDealt": 2, "lootAlliances": [ { "playedBy": "A", "capturedBy": "C" } ], "players": [ { "id": "A", "bid": 1, "tricks": 1 }, { "id": "B", "bid": 1, "tricks": 1 }, { "id": "C", "bid": 0, "tricks": 0 } ] },
+      "expectedErrors": ["LOOT_INVALID"] },
+
+    { "id": "val-17-trop-de-pirates-pour-3-joueurs", "setup": {},
+      "round": { "cardsDealt": 5, "players": [ { "id": "A", "bid": 3, "tricks": 3, "bonus": { "piratesBySkullKing": 3 } }, { "id": "B", "bid": 1, "tricks": 1 }, { "id": "C", "bid": 1, "tricks": 1 } ] },
+      "expectedErrors": ["PIRATES_BY_SK_EXCEEDED"] },
+
+    { "id": "val-18-butin-extension-desactivee", "setup": {},
+      "round": { "cardsDealt": 2, "lootAlliances": [ { "playedBy": "A", "capturedBy": "B" } ], "players": [ { "id": "A", "bid": 1, "tricks": 1 }, { "id": "B", "bid": 1, "tricks": 1 }, { "id": "C", "bid": 0, "tricks": 0 } ] },
+      "expectedErrors": ["LOOT_INVALID"] },
+
+    { "id": "val-19-erreurs-multiples-toutes-rapportees", "setup": {},
+      "round": { "cardsDealt": 3, "players": [ { "id": "A", "bid": 5, "tricks": 0, "bonus": { "black14": true } }, { "id": "B", "bid": 1, "tricks": 1 }, { "id": "C", "bid": 1, "tricks": 1 } ] },
+      "expectedErrors": ["BID_OUT_OF_RANGE", "BONUS_WITHOUT_TRICK", "TRICKS_SUM_MISMATCH"] }
+  ],
+
+  "scheduleCases": [
+    { "id": "plan-01-6-joueurs-standard", "setup": { "playerCount": 6, "preset": "standard" }, "expectedCardsPerRound": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
+    { "id": "plan-02-7-joueurs-standard", "setup": { "playerCount": 7, "preset": "standard" }, "expectedCardsPerRound": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
+    { "id": "plan-03-8-joueurs-jeu-de-base", "setup": { "playerCount": 8, "preset": "standard" }, "expectedCardsPerRound": [1, 2, 3, 4, 5, 6, 7, 8, 8, 8] },
+    { "id": "plan-04-8-joueurs-toutes-extensions", "setup": { "playerCount": 8, "preset": "standard", "expansions": { "loot": true, "kraken": true, "whiteWhale": true } }, "expectedCardsPerRound": [1, 2, 3, 4, 5, 6, 7, 8, 9, 9] },
+    { "id": "plan-05-2-joueurs-fantome", "setup": { "playerCount": 2, "preset": "standard" }, "expectedCardsPerRound": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
+    { "id": "plan-06-even-keeled", "setup": { "playerCount": 4, "preset": "evenKeeled" }, "expectedCardsPerRound": [2, 2, 4, 4, 6, 6, 8, 8, 10, 10] },
+    { "id": "plan-07-skip-to-the-brawl", "setup": { "playerCount": 4, "preset": "skipToTheBrawl" }, "expectedCardsPerRound": [6, 7, 8, 9, 10] },
+    { "id": "plan-08-broadside-8-joueurs-plafonne", "setup": { "playerCount": 8, "preset": "broadsideBarrage" }, "expectedCardsPerRound": [8, 8, 8, 8, 8, 8, 8, 8, 8, 8] },
+    { "id": "plan-09-whirlpool", "setup": { "playerCount": 5, "preset": "whirlpool" }, "expectedCardsPerRound": [9, 9, 7, 7, 5, 5, 3, 3, 1, 1] },
+    { "id": "plan-10-swift-and-salty", "setup": { "playerCount": 3, "preset": "swiftAndSalty" }, "expectedCardsPerRound": [5, 5, 5, 5, 5] },
+    { "id": "plan-11-past-your-bedtime", "setup": { "playerCount": 4, "preset": "pastYourBedtime" }, "expectedCardsPerRound": [1] }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash(./scripts/check-all.sh:*)",
+      "Bash(bash scripts/check-all.sh:*)",
+      "Bash(python3:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(git init:*)",
+      "Bash(git status:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(swift:*)",
+      "Bash(xcodebuild:*)",
+      "Bash(xcrun:*)",
+      "Bash(xcodegen:*)",
+      "Bash(brew install xcodegen:*)",
+      "Bash(afconvert:*)",
+      "Bash(mkdir:*)",
+      "Bash(ls:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(chmod:*)",
+      "Bash(shasum:*)",
+      "Bash(sha256sum:*)",
+      "Bash(which:*)",
+      "Bash(open:*)",
+      "WebSearch",
+      "WebFetch"
+    ],
+    "deny": [
+      "Bash(sudo:*)",
+      "Bash(git push:*)",
+      "Bash(rm -rf /:*)",
+      "Bash(rm -rf ~:*)",
+      "Edit(shared/fixtures/**)",
+      "Write(shared/fixtures/**)",
+      "Edit(shared/reference/**)",
+      "Write(shared/reference/**)"
+    ]
+  }
+}
