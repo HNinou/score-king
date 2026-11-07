@@ -300,3 +300,24 @@ test('15. règle maison : bonus comptés même sur un pari raté', async ({ page
   await playRound(page, names, [3, 1], [2, 2], { Anne: { black14: true } });
   expect(await scoreOf(page, 'Anne')).toBe(10);
 });
+
+test('17. la lanterne éteint et rallume la lumière, à l’accueil comme en partie', async ({ page }) => {
+  await page.goto('./');
+  const lights = () => page.evaluate(() => document.documentElement.dataset.lights ?? 'on');
+  const overlayZ = () => page.evaluate(() => getComputedStyle(document.body, '::after').zIndex);
+  await page.getByRole('button', { name: 'Éteindre la lanterne' }).click({ force: true });
+  expect(await lights()).toBe('off');
+  expect(await overlayZ()).toBe('94');
+  // la lumière reste éteinte en lançant une partie, et la lanterne suit dans la barre de jeu
+  await page.getByRole('button', { name: 'Nouvelle partie' }).click();
+  const input = page.getByPlaceholder('Nom du pirate');
+  for (const n of ['Anne', 'Bart']) {
+    await input.fill(n);
+    await input.press('Enter');
+  }
+  await page.getByRole('button', { name: "Lever l'ancre" }).click();
+  expect(await lights()).toBe('off');
+  await page.getByRole('button', { name: 'Rallumer la lanterne' }).click({ force: true });
+  expect(await lights()).toBe('on');
+  expect(await overlayZ()).not.toBe('94');
+});

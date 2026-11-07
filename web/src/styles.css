@@ -2762,3 +2762,14 @@ body {
   font-weight: 800;
   font-size: var(--fs-l);
 }
+/* extinction des feux : tout est noir sauf un halo qui suit le doigt ou la souris (la lanterne reste au-dessus) */
+:root[data-lights='off'] body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 94;
+  pointer-events: none;
+  opacity: 1;
+  animation: none;
+  background: radial-gradient(circle 120px at var(--mx, 50%) var(--my, 30%), transparent 0, transparent 60%, rgba(0, 0, 0, 0.96) 100%);
+}
