@@ -2,6 +2,8 @@
 
 Compteur de points pour le jeu de cartes **Skull King** : application web installable (PWA, hors-ligne). La version iOS viendra ensuite.
 
+**▶ Jouer en ligne : https://hninou.github.io/score-king/** — sur téléphone, « Ajouter à l'écran d'accueil » pour l'installer et l'utiliser sans réseau. Chaque push sur `main` relance les tests du moteur puis redéploie le site.
+
 ## Lancer l'app web
 ```bash
 cd web
