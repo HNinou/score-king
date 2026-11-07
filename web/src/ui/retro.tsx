@@ -1,6 +1,6 @@
 // Le « cachet » rétro : curseurs pixel, traînée de pièces derrière la souris, étincelles au tap,
 // lanterne qui se balance, navire qui passe, bandeau défilant, badges 88×31 et compteur à l'ancienne.
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { audio } from '../audio/audio';
 import type { Game } from '../game/model';
 import { t } from '../i18n/t';
@@ -141,30 +141,10 @@ function Pixel({ svg, className }: { svg: string; className?: string }) {
   return <span className={`pixel ${className ?? ''}`} aria-hidden="true" dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 
-/** Toucher la lanterne éteint la lumière : il ne reste qu'un halo qui suit le doigt ou la souris. */
-export function SwingingLantern() {
-  const [off, setOff] = useState(false);
-  useEffect(() => {
-    const root = document.documentElement;
-    if (!off) {
-      delete root.dataset.lights;
-      return;
-    }
-    root.dataset.lights = 'off';
-    const move = (e: PointerEvent) => {
-      root.style.setProperty('--mx', `${e.clientX}px`);
-      root.style.setProperty('--my', `${e.clientY}px`);
-    };
-    window.addEventListener('pointermove', move, { passive: true });
-    window.addEventListener('pointerdown', move, { passive: true });
-    return () => {
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerdown', move);
-      delete root.dataset.lights;
-    };
-  }, [off]);
+/** La lanterne qui se balance ; la toucher éteint ou rallume la lumière. */
+export function SwingingLantern({ mode, off, onToggle }: { mode: 'page' | 'bar'; off: boolean; onToggle: () => void }) {
   return (
-    <div className="lantern-wrap">
+    <div className={`lantern-wrap ${mode}`}>
       <div className="lantern-rope" />
       <button
         type="button"
@@ -172,11 +152,11 @@ export function SwingingLantern() {
         aria-pressed={off}
         aria-label={t(off ? 'home.lightsOn' : 'home.lightsOff')}
         onClick={() => {
-          setOff(!off);
+          onToggle();
           audio.play('twang', { force: true });
         }}
       >
-        <Pixel svg={spriteSvg(LANTERN, 4)} />
+        <Pixel svg={spriteSvg(LANTERN, mode === 'bar' ? 2.5 : 3)} />
         {!off && <span className="lantern-glow" />}
       </button>
     </div>

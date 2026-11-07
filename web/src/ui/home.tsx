@@ -2,7 +2,7 @@ import { currentRound, gameRanking, playerById, type Game } from '../game/model'
 import { useStore } from '../game/store';
 import { t } from '../i18n/t';
 import { Avatar, Compass, Crown, Icon } from './common';
-import { Badges, ShipParade, SwingingLantern, Ticker, VisitCounter } from './retro';
+import { Badges, ShipParade, Ticker, VisitCounter } from './retro';
 
 function winnerNames(g: Game): string {
   return gameRanking(g)
@@ -29,7 +29,6 @@ export function Home({
 
   return (
     <main className="screen home">
-      {state.prefs.retro && <SwingingLantern />}
       {state.prefs.retro && <Ticker />}
       <div style={{ textAlign: 'center', padding: 'var(--sp-6) 0 var(--sp-4)' }}>
         <Compass />

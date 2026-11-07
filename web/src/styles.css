@@ -1458,33 +1458,40 @@ button {
   position: relative;
 }
 .lantern-wrap {
-  position: absolute;
-  top: 34px;
-  right: var(--sp-5);
-  width: 48px;
-  z-index: 2;
+  position: fixed;
+  top: 0;
+  right: 14px;
+  width: 36px;
   transform-origin: 50% 0;
   animation: swing 3.6s ease-in-out infinite;
   z-index: 95;
+  pointer-events: none;
 }
 .lantern-wrap .lantern {
-  border: 0;
-  background: transparent;
-  padding: 0;
+  pointer-events: auto;
 }
-:root[data-lights='off'] body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 94;
-  pointer-events: none;
-  opacity: 1;
-  animation: none;
-  background: radial-gradient(circle 120px at var(--mx, 50%) var(--my, 30%), transparent 0, transparent 60%, rgba(0, 0, 0, 0.96) 100%);
+.strip-wrap {
+  position: relative;
+}
+.lantern-wrap.bar {
+  position: absolute;
+  right: 14px;
+  width: 30px;
+}
+.lantern-wrap.bar .lantern-rope {
+  height: 6px;
+  width: 3px;
+}
+/* place réservée à la lanterne : ligne de titre des écrans, et à droite des scores en jeu */
+:root[data-retro='on'] .screen > .row:first-child {
+  padding-right: 44px;
+}
+:root[data-retro='on'] .leader-strip {
+  padding-right: 52px;
 }
 .lantern-rope {
   width: 4px;
-  height: 40px;
+  height: 22px;
   margin: 0 auto;
   background: repeating-linear-gradient(to bottom, #7a4a22 0 4px, #4e2e14 4px 8px);
 }
@@ -1495,8 +1502,9 @@ button {
 }
 .lantern-glow {
   position: absolute;
-  inset: -24px;
+  inset: -18px;
   border-radius: 50%;
+  pointer-events: none;
   background: radial-gradient(circle, rgba(255, 210, 120, 0.45), transparent 65%);
   animation: glow 2.2s steps(4) infinite;
 }
@@ -2613,4 +2621,9 @@ button {
     max-width: 30vw;
     text-align: left;
   }
+}
+/* rien ne doit élargir la page sur téléphone (halos, lanternes, animations qui débordent) */
+html,
+body {
+  overflow-x: clip;
 }

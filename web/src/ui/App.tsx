@@ -13,7 +13,8 @@ import { AboutScreen, RulesScreen, SettingsScreen } from './misc';
 import { RecapScreen } from './recap';
 import { RoundScreen } from './round';
 import { SetupScreen } from './setup';
-import { RetroLayer, StormLayer } from './retro';
+import { useLightsOut } from './lights';
+import { RetroLayer, StormLayer, SwingingLantern } from './retro';
 import { LeaderStrip } from './strip';
 
 type View = 'home' | 'setup' | 'game' | 'settings' | 'rules' | 'about';
@@ -99,6 +100,10 @@ export function App() {
   }, []);
 
   const inGame = view === 'game' && game !== undefined;
+  const [lightsOff, setLightsOff] = useState(false);
+  const toggleLights = useCallback(() => setLightsOff((x) => !x), []);
+  useLightsOut(prefs.retro && lightsOff);
+  const barLantern = inGame && (game.status === 'inProgress' || finalRecap === game.id);
   useWakeLock(inGame && game.status === 'inProgress' && prefs.wakeLock);
 
   const undo = useCallback(() => {
@@ -231,7 +236,10 @@ export function App() {
                 <Icon name="menu" />
               </button>
             </div>
-            <LeaderStrip game={game} />
+            <div className="strip-wrap">
+              <LeaderStrip game={game} />
+              {prefs.retro && <SwingingLantern mode="bar" off={lightsOff} onToggle={toggleLights} />}
+            </div>
           </header>
         )}
         {playing && prefs.retro && <StormLayer game={game} />}
@@ -251,6 +259,7 @@ export function App() {
       )}
       {body}
       <RetroLayer enabled={prefs.retro} />
+      {prefs.retro && !barLantern && <SwingingLantern mode="page" off={lightsOff} onToggle={toggleLights} />}
       {ledger && game && <Ledger game={game} onClose={() => setLedger(false)} />}
       {menu && game && (
         <Modal onClose={() => setMenu(false)} label={t('game.menu')}>
