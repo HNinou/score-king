@@ -52,7 +52,7 @@ function Chart({ game }: { game: Game }) {
   );
 }
 
-export function Ledger({ game, onClose }: { game: Game; onClose: () => void }) {
+export function Ledger({ game, onClose, readOnly = false }: { game: Game; onClose: () => void; readOnly?: boolean }) {
   const rounds = doneRounds(game);
   const running = gameRunning(game);
   const ranking = gameRanking(game);
@@ -97,7 +97,7 @@ export function Ledger({ game, onClose }: { game: Game; onClose: () => void }) {
                   </th>
                   {r.voided && (
                     <td colSpan={r.entries.length} style={{ textAlign: 'center' }}>
-                      <button type="button" onClick={() => setConfirm(r)} className="muted" style={{ textAlign: 'center', fontStyle: 'italic' }}>
+                      <button type="button" disabled={readOnly} onClick={() => setConfirm(r)} className="muted" style={{ textAlign: 'center', fontStyle: 'italic' }}>
                         {t('ledger.voided')}
                       </button>
                     </td>
@@ -106,7 +106,7 @@ export function Ledger({ game, onClose }: { game: Game; onClose: () => void }) {
                     const pts = res[e.playerId]?.total ?? 0;
                     return (
                       <td key={e.playerId}>
-                        <button type="button" onClick={() => setConfirm(r)} aria-label={`${t('round.title', { r: r.index + 1 })}`}>
+                        <button type="button" disabled={readOnly} onClick={() => setConfirm(r)} aria-label={`${t('round.title', { r: r.index + 1 })}`}>
                           <span className="cell-bt">
                             {effectiveBid(e) ?? '–'}/{e.tricks ?? '–'}
                           </span>

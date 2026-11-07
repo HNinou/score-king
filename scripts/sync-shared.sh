@@ -7,7 +7,7 @@ cp shared/copy/voice-fr.json web/src/i18n/fr.json
 for f in shared/sounds/*.wav; do
   b="$(basename "$f" .wav)"
   if command -v afconvert >/dev/null 2>&1; then
-    case "$b" in music-*) rate=64000 ;; *) rate=96000 ;; esac
+    case "$b" in music-*) rate=48000 ;; *) rate=96000 ;; esac
     afconvert -f m4af -d aac -b "$rate" "$f" "web/public/sounds/$b.m4a"
   else
     cp "$f" "web/public/sounds/$b.wav"

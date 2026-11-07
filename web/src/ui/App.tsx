@@ -13,6 +13,8 @@ import { AboutScreen, RulesScreen, SettingsScreen } from './misc';
 import { RecapScreen } from './recap';
 import { RoundScreen } from './round';
 import { SetupScreen } from './setup';
+import { LiveHost, newRoomCode } from '../sync/live';
+import { LiveModal } from './live';
 import { useLightsOut } from './lights';
 import { RetroLayer, StormLayer, SwingingLantern } from './retro';
 import { LeaderStrip } from './strip';
@@ -101,6 +103,46 @@ export function App() {
 
   const inGame = view === 'game' && game !== undefined;
   const [lightsOff, setLightsOff] = useState(false);
+  const [live, setLive] = useState<LiveHost | null>(null);
+  const [liveOpen, setLiveOpen] = useState(false);
+  const startLive = useCallback((gameId: string, open: boolean) => {
+    let code = newRoomCode();
+    try {
+      const saved = JSON.parse(sessionStorage.getItem('score-king:live') ?? 'null') as { gameId?: string; code?: string } | null;
+      if (saved?.gameId === gameId && saved.code) code = saved.code;
+      sessionStorage.setItem('score-king:live', JSON.stringify({ gameId, code }));
+    } catch {
+      // stockage de session indisponible : nouveau code
+    }
+    setLive(new LiveHost(code));
+    if (open) setLiveOpen(true);
+  }, []);
+  const stopLive = useCallback(() => {
+    setLive((h) => {
+      h?.stop();
+      return null;
+    });
+    setLiveOpen(false);
+    try {
+      sessionStorage.removeItem('score-king:live');
+    } catch {
+      // rien à faire
+    }
+  }, []);
+  // la diffusion reprend toute seule après un rechargement de la page de l'hôte
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem('score-king:live') ?? 'null') as { gameId?: string } | null;
+      if (saved?.gameId && saved.gameId === state.currentId) startLive(saved.gameId, false);
+    } catch {
+      // rien à reprendre
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (live && game) live.publish(game);
+  }, [live, game]);
+  useEffect(() => () => live?.stop(), [live]);
   const toggleLights = useCallback(() => setLightsOff((x) => !x), []);
   useLightsOut(prefs.retro && lightsOff);
   const barLantern = inGame && (game.status === 'inProgress' || finalRecap === game.id);
@@ -127,6 +169,7 @@ export function App() {
   }, [undo, redo]);
 
   const goHome = () => {
+    stopLive();
     store.dispatch({ type: 'closeGame' });
     setView('home');
     setReveal(false);
@@ -232,8 +275,9 @@ export function App() {
               >
                 <Icon name={prefs.sound ? 'bell' : 'bellOff'} />
               </button>
-              <button className="icon-btn" type="button" onClick={() => setMenu(true)} aria-label={t('game.menu')}>
+              <button className="icon-btn" type="button" onClick={() => setMenu(true)} aria-label={t('game.menu')} style={{ position: 'relative' }}>
                 <Icon name="menu" />
+                {live && <span className="live-pip" aria-label={t('live.badge')} />}
               </button>
             </div>
             <div className="strip-wrap">
@@ -264,6 +308,17 @@ export function App() {
       {menu && game && (
         <Modal onClose={() => setMenu(false)} label={t('game.menu')}>
           <div className="stack">
+            <button
+              className="btn block"
+              type="button"
+              onClick={() => {
+                setMenu(false);
+                if (live) setLiveOpen(true);
+                else startLive(game.id, true);
+              }}
+            >
+              <Icon name="share" /> {live ? t('live.open') : t('live.start')}
+            </button>
             <button className="btn block" type="button" disabled={!canRedo} onClick={() => { setMenu(false); redo(); }}>
               <Icon name="redo" /> {t('game.redo')}
             </button>
@@ -284,6 +339,7 @@ export function App() {
           </div>
         </Modal>
       )}
+      {liveOpen && live && <LiveModal host={live} onStop={stopLive} onClose={() => setLiveOpen(false)} />}
       {abandon && (
         <Confirm
           text={t('game.abandonConfirm')}
