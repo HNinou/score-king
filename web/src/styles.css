@@ -1505,16 +1505,20 @@ button {
   inset: -18px;
   border-radius: 50%;
   pointer-events: none;
-  background: radial-gradient(circle, rgba(255, 210, 120, 0.45), transparent 65%);
-  animation: glow 2.2s steps(4) infinite;
+  background: radial-gradient(circle, rgba(255, 224, 150, 0.38) 0, rgba(255, 190, 90, 0.18) 38%, rgba(255, 160, 60, 0.06) 58%, transparent 72%);
+  mix-blend-mode: screen;
+  filter: blur(2px);
+  animation: glow 2.6s ease-in-out infinite;
 }
 @keyframes swing {
   0%, 100% { transform: rotate(5deg); }
   50% { transform: rotate(-5deg); }
 }
 @keyframes glow {
-  0%, 100% { opacity: 0.9; }
-  50% { opacity: 0.55; }
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  30% { opacity: 0.6; transform: scale(0.94); }
+  55% { opacity: 0.95; transform: scale(1.05); }
+  80% { opacity: 0.7; transform: scale(0.98); }
 }
 .ticker {
   overflow: hidden;
@@ -2770,6 +2774,24 @@ body {
   z-index: 94;
   pointer-events: none;
   opacity: 1;
-  animation: none;
-  background: radial-gradient(circle 120px at var(--mx, 50%) var(--my, 30%), transparent 0, transparent 60%, rgba(0, 0, 0, 0.96) 100%);
+  background: radial-gradient(
+    circle 170px at var(--mx, 50%) var(--my, 30%),
+    rgba(255, 200, 110, 0.06) 0,
+    rgba(255, 170, 70, 0.04) 35%,
+    rgba(30, 16, 6, 0.55) 62%,
+    rgba(6, 4, 2, 0.88) 84%,
+    rgba(2, 1, 0, 0.94) 100%
+  );
+  animation: flame 3.2s ease-in-out infinite;
+}
+@keyframes flame {
+  0%, 100% { opacity: 1; }
+  40% { opacity: 0.94; }
+  70% { opacity: 0.98; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-lights='off'] body::after,
+  .lantern-glow {
+    animation: none;
+  }
 }
