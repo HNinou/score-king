@@ -1505,6 +1505,20 @@ button {
   position: relative;
   display: grid;
   place-items: center;
+  width: 100%;
+  margin: -1px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  appearance: none;
+  line-height: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.lantern:focus-visible {
+  outline: 2px solid var(--gold-deco);
+  outline-offset: 2px;
 }
 .lantern-glow {
   position: absolute;
