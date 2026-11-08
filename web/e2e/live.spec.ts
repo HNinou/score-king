@@ -1,6 +1,6 @@
 // Diffusion en direct : un hôte et un spectateur dans deux navigateurs distincts.
 // Nécessite Internet (mise en relation PeerJS) : le test est ignoré hors ligne.
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { newGame, setBids } from './helpers';
 
 test('16. un spectateur suit la partie en direct, sans pouvoir la modifier', async ({ browser, request }) => {

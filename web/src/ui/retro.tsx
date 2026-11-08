@@ -1,6 +1,7 @@
 // Le « cachet » rétro : curseurs pixel, traînée de pièces derrière la souris, étincelles au tap,
 // lanterne qui se balance, navire qui passe, bandeau défilant, badges 88×31 et compteur à l'ancienne.
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { audio } from '../audio/audio';
 import type { Game } from '../game/model';
 import { t } from '../i18n/t';
@@ -143,8 +144,8 @@ function Pixel({ svg, className }: { svg: string; className?: string }) {
 
 /** La lanterne qui se balance ; la toucher éteint ou rallume la lumière. */
 export function SwingingLantern({ mode, off, onToggle }: { mode: 'page' | 'bar'; off: boolean; onToggle: () => void }) {
-  return (
-    <div className={`lantern-wrap ${mode}`}>
+  const lantern = (style?: { top: number; left: number }) => (
+    <div className={`lantern-wrap ${mode}`} style={style}>
       <div className="lantern-rope" />
       <button
         type="button"
@@ -160,6 +161,38 @@ export function SwingingLantern({ mode, off, onToggle }: { mode: 'page' | 'bar';
         {!off && <span className="lantern-glow" />}
       </button>
     </div>
+  );
+  return mode === 'page' ? lantern() : <BarLantern render={lantern} />;
+}
+
+// En jeu, la lanterne pend sous la barre du haut, mais elle est rendue au niveau de la page
+// pour rester au-dessus des fenêtres (classement, Grand Livre, scènes…) et de l'obscurité.
+function BarLantern({ render }: { render: (style: { top: number; left: number }) => ReactNode }) {
+  const anchor = useRef<HTMLSpanElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  useEffect(() => {
+    const el = anchor.current;
+    if (!el) return;
+    const place = () => {
+      const r = el.getBoundingClientRect();
+      setPos((p) => (p && p.top === r.top && p.left === r.left ? p : { top: r.top, left: r.left }));
+    };
+    place();
+    const ro = new ResizeObserver(place);
+    ro.observe(document.documentElement);
+    window.addEventListener('scroll', place, { passive: true });
+    window.addEventListener('resize', place);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('scroll', place);
+      window.removeEventListener('resize', place);
+    };
+  }, []);
+  return (
+    <>
+      <span ref={anchor} className="lantern-anchor" aria-hidden="true" />
+      {pos && createPortal(render(pos), document.body)}
+    </>
   );
 }
 

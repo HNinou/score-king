@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { newGame, nextRound, playRound, row, scoreOf, setBids, setTricks, skipScenes, type BonusInput } from './helpers';
@@ -320,4 +320,27 @@ test('17. la lanterne éteint et rallume la lumière, à l’accueil comme en pa
   await page.getByRole('button', { name: 'Rallumer la lanterne' }).click({ force: true });
   expect(await lights()).toBe('on');
   expect(await overlayZ()).not.toBe('94');
+});
+
+test('18. la lanterne reste visible et cliquable au-dessus du classement, du Grand Livre et chez les spectateurs', async ({ page }) => {
+  const onTop = () =>
+    page.evaluate(() => {
+      const l = document.querySelector<HTMLElement>('.lantern');
+      if (!l) return false;
+      const b = l.getBoundingClientRect();
+      return l.contains(document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2));
+    });
+  const names = ['Anne', 'Bart'];
+  await newGame(page, names);
+  await playRound(page, names, [0, 1], [0, 1]);
+  await page.getByRole('button', { name: 'Manche suivante' }).click();
+  await expect(page.getByRole('dialog', { name: 'Classement' })).toBeVisible();
+  expect(await onTop()).toBe(true);
+  await page.getByRole('dialog', { name: 'Classement' }).getByRole('button').click();
+  await page.getByRole('button', { name: 'Grand Livre' }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  expect(await onTop()).toBe(true);
+  await page.goto('./#voir=ABCDEF');
+  await expect(page.getByRole('button', { name: 'Éteindre la lanterne' })).toBeVisible();
+  expect(await onTop()).toBe(true);
 });

@@ -6,12 +6,24 @@ import { t } from '../i18n/t';
 import { watch, type WatchStatus } from '../sync/live';
 import { Avatar, Compass, Crown, Icon, RollingNumber, Signed } from './common';
 import { Ledger } from './ledger';
+import { useLightsOut } from './lights';
+import { RetroLayer, SwingingLantern } from './retro';
 
 export function SpectatorApp({ code }: { code: string }) {
   const { state } = useStore();
   const [game, setGame] = useState<Game | null>(null);
   const [status, setStatus] = useState<WatchStatus>('connecting');
   const [ledger, setLedger] = useState(false);
+  const [lightsOff, setLightsOff] = useState(false);
+  const retro = state.prefs.retro;
+  useLightsOut(retro && lightsOff);
+  // la lanterne suit le spectateur sur chaque écran, comme chez l'hôte
+  const lantern = (
+    <>
+      <RetroLayer enabled={retro} />
+      {retro && <SwingingLantern mode="page" off={lightsOff} onToggle={() => setLightsOff((x) => !x)} />}
+    </>
+  );
   const prevTotals = useRef<Record<string, number>>({});
 
   useEffect(() => watch(code, setGame, setStatus), [code]);
@@ -36,6 +48,7 @@ export function SpectatorApp({ code }: { code: string }) {
 
   if (!game) {
     return (
+      <>
       <main className="screen" style={{ textAlign: 'center', paddingTop: '20vh' }}>
         <Compass />
         <h1 className="title">{t('watch.title')}</h1>
@@ -46,6 +59,8 @@ export function SpectatorApp({ code }: { code: string }) {
           {t('watch.leave')}
         </button>
       </main>
+        {lantern}
+      </>
     );
   }
 
@@ -56,6 +71,7 @@ export function SpectatorApp({ code }: { code: string }) {
   const winners = ranking.filter((x) => x.rank === 1).map((x) => playerById(game, x.id)?.name ?? '');
 
   return (
+    <>
     <main className="screen spectator">
       <div className="row" style={{ flexWrap: 'wrap' }}>
         <h1 className="title">{t('watch.title')}</h1>
@@ -131,5 +147,7 @@ export function SpectatorApp({ code }: { code: string }) {
       </div>
       {ledger && <Ledger game={game} readOnly onClose={() => setLedger(false)} />}
     </main>
+    {lantern}
+    </>
   );
 }

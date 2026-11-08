@@ -1,5 +1,5 @@
 // Captures de revue visuelle : chaque écran dans un état réaliste (lancé à la demande : SHOTS=1 npx playwright test screenshots).
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './fixtures';
 import { newGame, nextRound, playRound, setBids, setTricks, skipScenes } from './helpers';
 
 const OUT = '../docs/screenshots/web';

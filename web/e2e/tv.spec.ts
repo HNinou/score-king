@@ -1,5 +1,5 @@
 // Captures « mode télé » (à la demande : SHOTS=1 npx playwright test tv).
-import { test } from '@playwright/test';
+import { test } from './fixtures';
 import { newGame, nextRound, playRound } from './helpers';
 
 test.skip(!process.env.SHOTS, 'captures à la demande');

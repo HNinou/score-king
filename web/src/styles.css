@@ -1473,9 +1473,15 @@ button {
 .strip-wrap {
   position: relative;
 }
-.lantern-wrap.bar {
+.lantern-anchor {
   position: absolute;
+  top: 0;
   right: 14px;
+  width: 30px;
+  height: 0;
+}
+.lantern-wrap.bar {
+  right: auto;
   width: 30px;
 }
 .lantern-wrap.bar .lantern-rope {

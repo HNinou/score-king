@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { newGame, row } from './helpers';
 
 test('bureau : saisie des paris au clavier', async ({ page }) => {
