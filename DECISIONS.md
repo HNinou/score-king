@@ -35,3 +35,8 @@ Format : `AAAA-MM-JJ — Sujet` · Contexte · Décision · Alternative écarté
 - Contexte : en partie, la lanterne était dans la barre du haut et passait sous le classement, le Grand Livre et le menu ; la page spectateur n'en avait pas. Par ailleurs, la synthèse vocale système bloquait par moments le Chromium de test (échecs aléatoires).
 - Décision : la lanterne de jeu garde sa place sous la barre mais est rendue au niveau de la page (portail) pour rester au-dessus de tout ; les spectateurs ont la leur. En e2e, `e2e/fixtures.ts` remplace `speechSynthesis.speak` par une annonce qui se termine aussitôt.
 - Alternative écartée : masquer la lanterne pendant les fenêtres (contraire à la demande « présente tout le long du jeu »).
+
+## 2026-11-08 — Tirage du premier joueur, saisie présélectionnée à zéro
+- Contexte : demande de l'utilisateur, pour gagner du temps à table (s'écarte de la spec « À l'abordage actif quand tous les paris sont saisis »).
+- Décision : le tirage désigne le joueur qui commence et règle le donneur juste avant lui, sans toucher à l'ordre de table. Pour les mises et les plis, un joueur non saisi reste `null` en interne mais s'affiche et compte comme 0 ; `null` devient 0 au passage aux plis et à la validation. La validation reste bloquée si le total des plis est faux.
+- Alternative écartée : créer les manches avec 0 en dur (le tour de table, l'avancement automatique et l'écran spectateur perdraient l'information « pas encore saisi »).

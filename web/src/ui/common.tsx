@@ -96,6 +96,12 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M12 8v8M9.5 10h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4" />
     </>
   ),
+  dice: (
+    <>
+      <rect x="4" y="4" width="16" height="16" rx="3" />
+      <path d="M8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01" strokeWidth="2.6" strokeLinecap="round" />
+    </>
+  ),
 };
 
 export function Icon({ name, size = 24 }: { name: keyof typeof ICONS | string; size?: number }) {

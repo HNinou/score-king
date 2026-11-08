@@ -115,11 +115,12 @@ export function gameReducer(g: Game, a: GameAction, now = new Date()): Game {
       case 'setLoot':
         return patchCurrent(g, (r) => ({ ...r, lootAlliances: a.alliances }));
       case 'toTricks':
-        return patchCurrent(g, (r) => ({ ...r, phase: 'tricks' }));
+        return patchCurrent(g, (r) => ({ ...r, phase: 'tricks', entries: r.entries.map((e) => ({ ...e, bid: e.bid ?? 0 })) }));
       case 'toBids':
         return patchCurrent(g, (r) => ({ ...r, phase: 'bids' }));
       case 'validateRound': {
-        const done = patchCurrent(g, (r) => ({ ...r, phase: 'done' }));
+        // ce qui n'a pas été touché vaut zéro (présélection de la saisie)
+        const done = patchCurrent(g, (r) => ({ ...r, phase: 'done', entries: r.entries.map((e) => ({ ...e, bid: e.bid ?? 0, tricks: e.tricks ?? 0 })) }));
         const finished = done.rounds.length >= g.settings.cardsPerRound.length;
         return finished ? { ...done, status: 'finished' } : done;
       }

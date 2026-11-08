@@ -1,5 +1,15 @@
 {
   "events": {
+    "drawFirst": [
+      "{nom} ouvre le bal. Personne n'a protesté, c'est louche.",
+      "Le sort a parlé : {nom} commence.",
+      "{nom} commence. Le perroquet a tranché.",
+      "C'est {nom} qui entame. Réclamations au capitaine.",
+      "{nom} joue en premier et ne peut s'en prendre qu'aux dieux.",
+      "Le rhum a désigné {nom}.",
+      "{nom} commence. Courte paille, longue rancune.",
+      "Le doigt du destin, un peu gras, pointe vers {nom}."
+    ],
     "bidsOver": [
       "{total} paris pour {n} plis. Y'a des menteurs autour de cette table.",
       "Ça annonce gros ! {total} pour {n}. Quelqu'un va pleurer.",
@@ -261,6 +271,9 @@
     "setup.players": "Équipage ({c}/8)",
     "setup.dealer": "Premier donneur",
     "setup.dealerBadge": "Donne",
+    "setup.draw": "Tirer au sort qui commence",
+    "setup.drawing": "Le sort hésite…",
+    "setup.leadLine": "{lead} commence, {dealer} distribue",
     "setup.options": "Options",
     "setup.start": "Lever l'ancre",
     "setup.needPlayers": "Il faut au moins 2 pirates",
@@ -303,7 +316,6 @@
     "bids.title": "Annoncez vos paris !",
     "bids.total": "Total des paris : {total} pour {n} plis",
     "bids.go": "À l'abordage !",
-    "bids.missing": "Il manque {c} pari(s)",
     "bids.passMode": "Tour de table",
     "bids.passHint": "Passe le téléphone à",
     "bids.passReady": "Je suis prêt·e",
@@ -319,7 +331,6 @@
     "tricks.allSet": "Tous les plis sont attribués",
     "tricks.destroyed": "Plis détruits (Kraken / Baleine)",
     "tricks.validate": "Valider la manche",
-    "tricks.missing": "Il manque les plis de {c} joueur(s)",
     "tricks.fixErrors": "Corrigez les erreurs en rouge",
     "tricks.made": "Réussi",
     "tricks.missedBy": "Raté de {x}",

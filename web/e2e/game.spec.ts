@@ -125,9 +125,9 @@ test('5. annuler 5 saisies revient à l’état de départ', async ({ page }) =>
   const names = ['Anne', 'Bart', 'Cléo', 'Dédé', 'Eli'];
   await newGame(page, names);
   await setBids(page, names, [1, 0, 1, 0, 1]);
-  for (const n of names) await expect(row(page, n).locator('.value')).not.toHaveText('–');
+  await expect(row(page, 'Anne').locator('.value')).toHaveText('1');
   for (let i = 0; i < 5; i++) await page.getByRole('button', { name: 'Annuler' }).click();
-  for (const n of names) await expect(row(page, n).locator('.value')).toHaveText('–');
+  for (const n of names) await expect(row(page, n).locator('.value')).toHaveText('0');
   await expect(page.getByRole('button', { name: 'Annuler' })).toBeDisabled();
 });
 
@@ -144,7 +144,7 @@ test('6. reprise après rechargement au milieu des paris', async ({ page }) => {
   await expect(page.locator('.round-num')).toHaveText('4');
   await expect(row(page, 'Anne').locator('.value')).toHaveText('2');
   await expect(row(page, 'Bart').locator('.value')).toHaveText('1');
-  await expect(row(page, 'Cléo').locator('.value')).toHaveText('–');
+  await expect(row(page, 'Cléo').locator('.value')).toHaveText('0');
 });
 
 test('7. hors-ligne après un premier chargement', async ({ page, context }) => {
@@ -259,7 +259,7 @@ test('12. incident : redistribuer puis annuler la manche', async ({ page }) => {
   await setBids(page, names, [1, 0]);
   await page.getByRole('button', { name: 'Incident' }).click();
   await page.getByRole('button', { name: 'Redistribuer' }).click();
-  await expect(row(page, 'Anne').locator('.value')).toHaveText('–');
+  await expect(row(page, 'Anne').locator('.value')).toHaveText('0');
   await page.getByRole('button', { name: 'Incident' }).click();
   await page.getByRole('button', { name: 'Annuler la manche' }).click();
   await page.getByRole('button', { name: 'Confirmer' }).click();
@@ -343,4 +343,46 @@ test('18. la lanterne reste visible et cliquable au-dessus du classement, du Gra
   await page.goto('./#voir=ABCDEF');
   await expect(page.getByRole('button', { name: 'Éteindre la lanterne' })).toBeVisible();
   expect(await onTop()).toBe(true);
+});
+
+test('19. tirage au sort : le joueur désigné commence et l’ordre de table ne bouge pas', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.addInitScript(() => {
+    Math.random = () => 0.5; // 4 joueurs : le tirage désigne Cléo (indice 2)
+  });
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Nouvelle partie' }).click();
+  const input = page.getByPlaceholder('Nom du pirate');
+  const names = ['Anne', 'Bart', 'Cléo', 'Dédé'];
+  for (const n of names) {
+    await input.fill(n);
+    await input.press('Enter');
+  }
+  await page.getByRole('button', { name: 'Tirer au sort qui commence' }).click();
+  await expect(page.getByText('Cléo commence, Bart distribue')).toBeVisible();
+  await page.getByRole('button', { name: "Lever l'ancre" }).click();
+  await expect(page.getByText(/Bart/).first()).toBeVisible();
+  const order = await page.locator('main li.prow .name').allTextContents();
+  expect(order).toEqual(names);
+  await expect(page.locator('li.prow.active .name')).toHaveText('Cléo');
+});
+
+test('20. mises et plis présélectionnés à zéro : seuls les autres chiffres se saisissent', async ({ page }) => {
+  const names = ['Anne', 'Bart', 'Cléo'];
+  await newGame(page, names);
+  for (const n of names) {
+    await expect(row(page, n).locator('.value')).toHaveText('0');
+    await expect(page.getByRole('group', { name: `Pari de ${n}` }).getByRole('button', { name: '0', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  }
+  await page.getByRole('button', { name: "À l'abordage !" }).click();
+  for (const n of names) await expect(row(page, n).locator('.value')).toHaveText('0');
+  await expect(page.getByRole('status').first()).toContainText('Plis restants à attribuer : 1');
+  await expect(page.getByText('Corrigez les erreurs en rouge')).toHaveCount(0);
+  await page.getByRole('group', { name: 'Plis de Bart' }).getByRole('button', { name: '1', exact: true }).click();
+  await page.getByRole('button', { name: 'Valider la manche' }).click();
+  await skipScenes(page);
+  await expect(page.getByRole('heading', { name: 'Le bilan' })).toBeVisible();
+  expect(await scoreOf(page, 'Anne')).toBe(10);
+  expect(await scoreOf(page, 'Bart')).toBe(-10);
+  expect(await scoreOf(page, 'Cléo')).toBe(10);
 });

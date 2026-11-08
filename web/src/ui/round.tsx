@@ -195,8 +195,9 @@ function BidsPhase({ game, round, onIncident }: { game: Game; round: Round; onIn
   };
 
   const go = () => {
-    if (missing > 0) return;
     audio.play('bell-bids');
+    // la remarque sur le total n'a pas encore été dite si des joueurs sont restés à zéro sans toucher
+    if (missing > 0 && witty) voice.say(quip(game.id, quipKey, { total, n }));
     store.dispatch({ type: 'toTricks' });
     window.scrollTo({ top: 0 });
   };
@@ -247,11 +248,11 @@ function BidsPhase({ game, round, onIncident }: { game: Game; round: Round; onIn
                 </span>
                 {isDealer && <span className="dealer-badge">{t('setup.dealerBadge')}</span>}
                 <span className="value" aria-live="polite">
-                  {e.bid ?? '–'}
+                  {e.bid ?? 0}
                 </span>
               </div>
-              <NumberGrid max={n} value={e.bid} label={t('bids.bidOf', { nom: p.name })} onPick={(v) => pick(i, v)} />
-              {cannon && e.bid !== null && (
+              <NumberGrid max={n} value={e.bid ?? 0} label={t('bids.bidOf', { nom: p.name })} onPick={(v) => pick(i, v)} />
+              {cannon && (
                 <div className="full seg">
                   {(['grapeshot', 'cannonball'] as const).map((c) => (
                     <button key={c} type="button" aria-pressed={e.cannon === c} onClick={() => liveSetters.setCannon(p.id, c)}>
@@ -270,8 +271,8 @@ function BidsPhase({ game, round, onIncident }: { game: Game; round: Round; onIn
             <span className="num">{t('bids.total', { total, n })}</span>
             {quipText && <span> — {quipText}</span>}
           </div>
-          <button className="btn primary block" type="button" disabled={missing > 0} onClick={go}>
-            {missing > 0 ? t('bids.missing', { c: missing }) : t('bids.go')}
+          <button className="btn primary block" type="button" onClick={go}>
+            {t('bids.go')}
           </button>
         </div>
       </div>
@@ -442,7 +443,7 @@ export function TricksPanel({
 
   let counterText: string;
   let counterOk = false;
-  if (remaining > 0 && twoPlayers && complete) counterText = t('tricks.ghost', { x: remaining });
+  if (remaining > 0 && twoPlayers) counterText = t('tricks.ghost', { x: remaining });
   else if (remaining > 0) counterText = t('tricks.remaining', { x: remaining });
   else if (remaining < 0) counterText = t('tricks.extra', { x: -remaining });
   else {
@@ -459,7 +460,7 @@ export function TricksPanel({
         className="card banner num"
         role="status"
         aria-live="polite"
-        style={{ marginBottom: 'var(--sp-3)', color: sumError ? 'var(--negative)' : counterOk || (twoPlayers && remaining > 0 && complete) ? 'var(--positive)' : 'var(--ink)' }}
+        style={{ marginBottom: 'var(--sp-3)', color: sumError ? 'var(--negative)' : counterOk || (twoPlayers && remaining > 0) ? 'var(--positive)' : 'var(--ink)' }}
       >
         <Icon name={counterOk ? 'check' : sumError ? 'cross' : 'coin'} size={20} />{' '}
         {sumError ? errorText(v.tricksDelta > 0 ? 'TRICKS_SUM_MISMATCH_MISSING' : 'TRICKS_SUM_MISMATCH', witty, { x: Math.abs(v.tricksDelta) }) : counterText}
@@ -484,7 +485,7 @@ export function TricksPanel({
                   {e.harryAdjustment !== 0 && ` (${e.bid ?? 0}${e.harryAdjustment > 0 ? '+' : '−'}${Math.abs(e.harryAdjustment)})`}
                 </span>
                 <span className="value" aria-live="polite">
-                  {e.tricks ?? '–'}
+                  {e.tricks ?? 0}
                 </span>
               </div>
               {editBids && (
@@ -498,7 +499,7 @@ export function TricksPanel({
                   </span>
                 </>
               )}
-              <NumberGrid max={n} value={e.tricks} label={t('tricks.tricksOf', { nom: p.name })} onPick={(x) => pick(i, x)} />
+              <NumberGrid max={n} value={e.tricks ?? 0} label={t('tricks.tricksOf', { nom: p.name })} onPick={(x) => pick(i, x)} />
               <div className="pline sub">
                 {diff !== null ? (
                   <span key={`${diff}`} className={`status ${diff === 0 ? 'pos' : 'neg'}`}>
@@ -561,8 +562,10 @@ export function TricksPanel({
 
 function TricksPhase({ game, round, onValidated, onIncident }: { game: Game; round: Round; onValidated: () => void; onIncident: () => void }) {
   const v = roundValidation(game, round);
-  const missing = round.entries.filter((e) => e.tricks === null).length;
-  const ok = missing === 0 && v.codes.length === 0;
+  const complete = round.entries.every((e) => e.tricks !== null);
+  const ok = v.codes.length === 0;
+  // tant que tout le monde n'est pas saisi, le compteur suffit : un total incomplet n'est pas une erreur
+  const blocking = v.codes.some((c) => complete || c !== 'TRICKS_SUM_MISMATCH');
   const validate = () => {
     if (!ok) {
       audio.play('parrot-squawk');
@@ -586,7 +589,7 @@ function TricksPhase({ game, round, onValidated, onIncident }: { game: Game; rou
       <div className="footer-bar">
         <div>
           <div className="footer-hint" aria-live="polite">
-            {missing > 0 ? t('tricks.missing', { c: missing }) : v.codes.length > 0 ? t('tricks.fixErrors') : ''}
+            {blocking ? t('tricks.fixErrors') : ''}
           </div>
           <button className="btn primary block" type="button" aria-disabled={!ok} style={ok ? undefined : { opacity: 0.5 }} onClick={validate}>
             {t('tricks.validate')}
